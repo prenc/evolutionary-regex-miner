@@ -10,8 +10,9 @@ const CROSSOVER_RATE = 0.5
 
 # mutation weights
 const ADD_LOOP_RATE = 1
-const ADD_BRANCH_RATE = 7
-const ADD_STATE_RATE = 3
+const ADD_BRANCH_RATE = 3
+const ADD_STATE_RATE = 2
+const REMOVE_BRANCH_RATE = 3
 
 const MIN_CHROMO_SIZE = 3
 const MAX_CHROMO_SIZE = 6

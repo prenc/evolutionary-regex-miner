@@ -8,11 +8,12 @@ include("parameters.jl")
 using Random: rand
 using StatsBase: sample, Weights
 
-@enum Mutation ADD_BRANCH ADD_LOOP ADD_STATE
+@enum Mutation ADD_BRANCH ADD_LOOP ADD_STATE REMOVE_BRANCH
 const ALL_MUTATIONS = Dict(
     ADD_BRANCH::Mutation => ADD_BRANCH_RATE,
     ADD_LOOP::Mutation => ADD_LOOP_RATE,
-    ADD_STATE::Mutation => ADD_STATE_RATE
+    ADD_STATE::Mutation => ADD_STATE_RATE,
+    REMOVE_BRANCH::Mutation => REMOVE_BRANCH_RATE
 )
 
 function add_loop(chromosome::String)::String
@@ -30,6 +31,29 @@ function add_branch(chromosome::String, letters::String)::String
 
     return chromosome[1: idx - 1] * '(' * chromosome[idx] * '|' * letter * ')' *
         chromosome[idx + 1: length(chromosome)]
+end
+
+function add_state(chromosome::String, letters::String)::String
+    idx = rand(1:length(chromosome))
+    letter = rand(letters)
+
+    return chromosome[1: idx] * letter * chromosome[idx + 1: length(chromosome)]
+end
+
+function remove_branch(chromosome::String)::String
+    bracket_ids = findall(l -> l == '(', chromosome)
+    isempty(bracket_ids) && return ""
+
+    idx = rand(bracket_ids)
+
+    c_bracket_idx = find_closing_bracket(chromosome, idx)
+    pipe_idx = find_closing_bracket(chromosome, idx, '|')
+
+    left_branch = chromosome[idx + 1: pipe_idx - 1]
+    rigth_branch = chromosome[pipe_idx + 1: c_bracket_idx - 1]
+
+    return chromosome[1: idx - 1] * rand([left_branch, rigth_branch]) *
+        chromosome[c_bracket_idx + 1: end]
 end
 
 function add_state(chromosome::String, letters::String)::String
@@ -70,11 +94,11 @@ function crossover(chromosome1::String, chromosome2::String)::String
     end
 end
 
-function find_closing_bracket(chromosome::String, opening_bracket_idx::Int)::Union{Int,Nothing}
+function find_closing_bracket(chromosome::String, opening_bracket_idx::Int, c::Char=')')::Union{Int,Nothing}
     closing_bracket_idx = nothing
     opening_bracket_counter = 0
     for i in opening_bracket_idx + 1: length(chromosome)
-        if chromosome[i] == ')' && opening_bracket_counter == 0
+        if chromosome[i] == c && opening_bracket_counter == 0
             closing_bracket_idx = i
             break
         elseif chromosome[i] == ')'
@@ -117,6 +141,8 @@ function mutate(new_population::Vector{String}, old_population::Vector{String}):
                 add_branch(chromo, LETTERS)
             elseif mutation == ADD_STATE
                 add_state(chromo, LETTERS)
+            elseif mutation == REMOVE_BRANCH
+                remove_branch(chromo)
             else
                 error("Unsupported mutation encounterd! $(mutation)")
             end
