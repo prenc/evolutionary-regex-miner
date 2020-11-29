@@ -55,10 +55,12 @@ for i in 1:ITERATION_NUMBER
     global top_rank_list, old_population
 
     new_population = Vector{String}()
-    println("Best chromosomes")
-    for (chromo, penalty) in pairs(top_rank_list)
-        if length(new_population) <= REPRODUCTION_SIZE
+    println("Top 5 chromosomes:")
+    for (i, (chromo, penalty)) in enumerate(pairs(top_rank_list))
+        if i <= 5
             println("chromo: ", chromo, ", penalty: ", penalty)
+        end
+        if length(new_population) <= REPRODUCTION_SIZE
             push!(new_population, chromo)
         else
             break
@@ -67,7 +69,6 @@ for i in 1:ITERATION_NUMBER
 
     new_population = mutate(new_population, old_population)
 
-    println("New population")
     new_scores = score_population(new_population, lines)
 
     top_rank_list = OrderedDict(
@@ -81,8 +82,9 @@ for i in 1:ITERATION_NUMBER
         pop!(top_rank_list)
     end
 
+    println("New chromosomes sample:")
     for (chromo, penalty) in sample(new_scores, 5)
-        println("Chromo: ", chromo, ", penalty: ", penalty)
+        println("chromo: ", chromo, ", penalty: ", penalty)
     end
 
     old_population = new_population
