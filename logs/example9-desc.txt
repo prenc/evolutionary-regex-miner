@@ -1,0 +1,8 @@
+100 abcdeghhhilmno
+100 abcdeghhhilmo
+80 abcdeghilnmo
+80 abcdeghilmo
+40 abcdeghhhijkbcdfghilmo
+30 abcdeghilnmo
+10 acbdfghhhhilno
+10 acbdfghilno
