@@ -6,10 +6,14 @@ include("parameters.jl")
 
 using StatsBase: sample
 using DataStructures: OrderedDict
+
 using .scoring
 using .evolution
 
 lines = readlines(LOG_FILE)
+
+println("FOR PRESENTATION PURPOSES")
+println("#########################")
 
 println("Initial regex: ", EXAMPLE_REGEX)
 println("Score: ", score(EXAMPLE_REGEX, lines))
@@ -41,6 +45,7 @@ for _ in 1:5
     println(crossover(EXAMPLE_REGEX, "ab(d(a|g)|(a|g)c)+"))
 end
 
+println("#########################")
 println()
 # algorithm
 println("Actual algorithm")
@@ -51,7 +56,7 @@ old_population = init_population(LETTERS, POPULATION_SIZE)
 top_rank_list = OrderedDict{String,Float64}(score_population(old_population, lines))
 
 for i in 1:ITERATION_NUMBER
-    println("[ITERATION $(i)]")
+    println("[GENERATION $(i)]")
     global top_rank_list, old_population
 
     new_population = Vector{String}()
@@ -89,4 +94,5 @@ for i in 1:ITERATION_NUMBER
 
     old_population = new_population
 end
+
 end

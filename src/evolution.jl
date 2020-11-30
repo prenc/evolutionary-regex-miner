@@ -170,9 +170,11 @@ function mutate(new_population::Vector{String}, old_population::Vector{String}):
             Regex(new_chromo)
             if length(new_chromo) >= MIN_CHROMO_SIZE
                 push!(new_population, new_chromo)
+            else
+                @debug "Too small chromo: '$(mutation)': '$(chromo)' -> '$(new_chromo)'"
             end
         catch e
-            @info "$(mutation) dead chromo: '$(chromo)' -> '$(new_chromo)'"
+            @debug "Faulty chromo: '$(mutation)': '$(chromo)' -> '$(new_chromo)'"
         end
     end
     return new_population
