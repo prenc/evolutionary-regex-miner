@@ -78,14 +78,12 @@ for i in 1:ITERATION_NUMBER
 
     new_scores = score_population(new_population, lines)
 
-    top_rank_list = OrderedDict(
-        sort(
-            vcat(collect(pairs(top_rank_list)), new_scores),
-            by = x -> x[2]
-       )
-    )
+    for (chromo, score) in new_scores
+        top_rank_list[chromo] = score
+    end
+    sort!(top_rank_list, byvalue=true)
 
-    while length(top_rank_list) >= TOP_LIST_SIZE
+    while length(top_rank_list) > TOP_LIST_SIZE
         pop!(top_rank_list)
     end
 
