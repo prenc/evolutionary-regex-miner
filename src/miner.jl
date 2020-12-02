@@ -10,6 +10,8 @@ using DataStructures: OrderedDict
 using .scoring
 using .evolution
 
+import .evolution: add_event, add_branch, add_loop, crossover
+
 lines = readlines(LOG_FILE)
 
 println("FOR PRESENTATION PURPOSES")
@@ -19,23 +21,23 @@ println("Initial regex: ", EXAMPLE_REGEX)
 println("Score: ", score(EXAMPLE_REGEX, lines))
 
 println()
-println("add loop:")
+println("Add event:")
+
 for _ in 1:5
-    println(add_loop(EXAMPLE_REGEX))
+    println(add_event(EXAMPLE_REGEX, LETTERS))
 end
 
 println()
-println("add branch:")
+println("Add branch:")
 
 for _ in 1:5
     println(add_branch(EXAMPLE_REGEX, LETTERS))
 end
 
 println()
-println("add state:")
-
+println("Add loop:")
 for _ in 1:5
-    println(add_state(EXAMPLE_REGEX, LETTERS))
+    println(add_loop(EXAMPLE_REGEX))
 end
 
 println()
