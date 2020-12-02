@@ -1,3 +1,3 @@
-x y 
-x a a y
-x a y
+xy
+xaay
+xay

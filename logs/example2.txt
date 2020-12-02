@@ -1,86 +1,86 @@
-a b c d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-a c b d 
-e f 
+abcd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+acbd
+ef
