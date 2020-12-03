@@ -14,9 +14,8 @@ function score(regex::String, logs::Vector{String})::Float64
             matches = collect(eachmatch(Regex(regex), log))
             push!(
                 log_fitness,
-                isempty(matches) ? 1 : 1 - findmax(
-                        map(m -> length(m.match), matches)
-                    )[1] / length(log)
+                isempty(matches) ? 1 :
+                1 - findmax(map(m -> length(m.match), matches))[1] / length(log),
             )
         catch e
             @debug "Regex failed due to its complexity: '$(regex)'"
@@ -25,22 +24,18 @@ function score(regex::String, logs::Vector{String})::Float64
 
     fitness = mean(log_fitness)
 
-    state_number = length(findall(l -> isletter(l) || l == '+', collect(regex)))
+    precision = 0 # to be added
 
-    precision = state_number * STATE_PENALTY
+    simplicity =
+        length(findall(l -> isletter(l) || l == '+', collect(regex))) * STATE_PENALTY
 
-    @debug "Scoring '$(regex)': fitness: '$(fitness)', precision: '$(precision)'"
-    return fitness + precision
+    @debug "Score '$(regex)': fitness: '$(fitness)'," *
+           " precision: '$(precision)', simplicity: '$(simplicity)'"
+    return fitness + precision + simplicity
 end
 
 function score_population(population::Vector{String}, logs::Vector{String})
-    return sort(
-        map(
-            chromo -> Pair(chromo, score(chromo, logs)),
-            population
-           ),
-        by = x -> x[2]
-    )
+    return map(chromo -> Pair(chromo, score(chromo, logs)), population)
 end
 
 end

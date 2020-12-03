@@ -17,13 +17,13 @@ const ADD_LOOP_RATE = 1
 const REMOVE_LOOP_RATE = 4
 
 const MIN_CHROMO_SIZE = 3
-const MAX_CHROMO_SIZE = 6
+const INITIAL_MAX_CHROMO_SIZE = 6
 
 # scoring
 const STATE_PENALTY = 0.03
 
 const LOG_FILE = "logs/example7.txt"
-const LETTERS = "abcdefgh"
+const EVENTS = "abcdefgh"
 
 const EXAMPLE_REGEX = "d(b|c)e"
 

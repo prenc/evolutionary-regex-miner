@@ -12,38 +12,38 @@ using .evolution
 
 import .evolution: add_event, add_branch, add_loop, crossover
 
-lines = readlines(LOG_FILE)
+logs = readlines(LOG_FILE)
 
 println("FOR PRESENTATION PURPOSES")
 println("#########################")
 
 println("Initial regex: ", EXAMPLE_REGEX)
-println("Score: ", score(EXAMPLE_REGEX, lines))
+println("Score: ", score(EXAMPLE_REGEX, logs))
 
 println()
 println("Add event:")
 
-for _ in 1:5
-    println(add_event(EXAMPLE_REGEX, LETTERS))
+for _ = 1:5
+    println(add_event(EXAMPLE_REGEX, EVENTS))
 end
 
 println()
 println("Add branch:")
 
-for _ in 1:5
-    println(add_branch(EXAMPLE_REGEX, LETTERS))
+for _ = 1:5
+    println(add_branch(EXAMPLE_REGEX, EVENTS))
 end
 
 println()
 println("Add loop:")
-for _ in 1:5
+for _ = 1:5
     println(add_loop(EXAMPLE_REGEX))
 end
 
 println()
-println("crossover:")
+println("Crossover:")
 
-for _ in 1:5
+for _ = 1:5
     println(crossover(EXAMPLE_REGEX, "ab(d(a|g)|(a|g)c)+"))
 end
 
@@ -52,12 +52,11 @@ println()
 # algorithm
 println("Actual algorithm")
 
-old_population = init_population(LETTERS, POPULATION_SIZE)
+old_population = init_population(EVENTS, POPULATION_SIZE)
 
-# todo change to SortedDict which sorts by value
-top_rank_list = OrderedDict{String,Float64}(score_population(old_population, lines))
+top_rank_list = OrderedDict{String,Float64}(score_population(old_population, logs))
 
-for i in 1:ITERATION_NUMBER
+for i = 1:ITERATION_NUMBER
     println("[GENERATION $(i)]")
     global top_rank_list, old_population
 
@@ -76,12 +75,12 @@ for i in 1:ITERATION_NUMBER
 
     new_population = mutate(new_population, old_population)
 
-    new_scores = score_population(new_population, lines)
+    new_scores = score_population(new_population, logs)
 
     for (chromo, score) in new_scores
         top_rank_list[chromo] = score
     end
-    sort!(top_rank_list, byvalue=true)
+    sort!(top_rank_list, byvalue = true)
 
     while length(top_rank_list) > TOP_LIST_SIZE
         pop!(top_rank_list)

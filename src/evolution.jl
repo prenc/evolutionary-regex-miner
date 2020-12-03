@@ -22,14 +22,14 @@ const ALL_MUTATIONS = Dict(
     ADD_BRANCH => ADD_BRANCH_RATE,
     REMOVE_BRANCH => REMOVE_BRANCH_RATE,
     ADD_LOOP => ADD_LOOP_RATE,
-    REMOVE_LOOP => REMOVE_LOOP_RATE
+    REMOVE_LOOP => REMOVE_LOOP_RATE,
 )
 
-function add_event(chromo::String, letters::String)::String
+function add_event(chromo::String, events::String)::String
     idx = rand(1:length(chromo))
-    letter = rand(letters)
+    event = rand(events)
 
-    return chromo[1: idx] * letter * chromo[idx + 1: end]
+    return chromo[1:idx] * event * chromo[idx+1:end]
 end
 
 function remove_event(chromo::String)::String
@@ -41,7 +41,7 @@ function remove_event(chromo::String)::String
     end
 
     if (event > 1 && chromo[event-1] == '(') ||
-        (length(chromo) > r_event && chromo[r_event+1] == '|')
+       (length(chromo) > r_event && chromo[r_event+1] == '|')
         l_bracket, pipe, r_bracket, plus = find_brackets(chromo, event)
 
         if plus
@@ -49,7 +49,7 @@ function remove_event(chromo::String)::String
         end
         return chromo[1:l_bracket-1] * chromo[pipe+1:r_bracket-1] * chromo[r_bracket+1:end]
     elseif (event > 1 && chromo[event-1] == '|') ||
-        (length(chromo) > r_event && chromo[r_event+1] == ')')
+           (length(chromo) > r_event && chromo[r_event+1] == ')')
         l_bracket, pipe, r_bracket, plus = find_brackets(chromo, event)
 
         if plus
@@ -61,98 +61,97 @@ function remove_event(chromo::String)::String
     end
 end
 
-function add_branch(chromo::String, letters::String)::String
-    letter = rand(letters)
-    state_ids = findall(l -> isletter(l) && l != letter, collect(chromo))
+function add_branch(chromo::String, events::String)::Union{String,Nothing}
+    event = rand(events)
+    event_ids = findall(e -> isletter(e) && e != event, collect(chromo))
 
-    isempty(state_ids) && return "(+"
-    idx = rand(state_ids)
+    isempty(event_ids) && return nothing
+    idx = rand(event_ids)
 
-    return chromo[1: idx - 1] * '(' * chromo[idx] * '|' * letter * ')' *
-        chromo[idx + 1: end]
+    return chromo[1:idx-1] * '(' * chromo[idx] * '|' * event * ')' * chromo[idx+1:end]
 end
 
-function remove_branch(chromo::String)::String
+function remove_branch(chromo::String)::Union{String,Nothing}
     bracket_ids = findall(l -> l == '(', chromo)
-    isempty(bracket_ids) && return "(-"
+    isempty(bracket_ids) && return nothing
 
     idx = rand(bracket_ids)
 
     l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
 
-    left_branch = chromo[l_bracket: pipe-1]
-    right_branch = chromo[pipe+1: r_bracket]
+    left_branch = chromo[l_bracket:pipe-1]
+    right_branch = chromo[pipe+1:r_bracket]
 
     if plus
         r_bracket += 1
     end
 
-    return chromo[1: idx - 1] * rand([left_branch, right_branch]) *
-        chromo[r_bracket + 1: end]
+    return chromo[1:idx-1] * rand([left_branch, right_branch]) * chromo[r_bracket+1:end]
 end
 
-function add_loop(chromo::String)::String
+function add_loop(chromo::String)::Union{String,Nothing}
     possible_ids = Vector()
-    for i in 1:length(chromo)
+    for i = 1:length(chromo)
         if (isletter(chromo[i]) || chromo[i] == ')') &&
-               (length(chromo) == i || chromo[i + 1] != '+')
+           (length(chromo) == i || chromo[i+1] != '+')
             push!(possible_ids, i)
         end
     end
 
-    isempty(possible_ids) && return "++"
+    isempty(possible_ids) && return nothing
     idx = rand(possible_ids)
 
-    return chromo[1: idx] * '+' * chromo[idx + 1: end]
+    return chromo[1:idx] * '+' * chromo[idx+1:end]
 end
 
-function remove_loop(chromo::String)::String
+function remove_loop(chromo::String)::Union{String,Nothing}
     plus_ids = findall(l -> l == '+', chromo)
-    isempty(plus_ids) && return "+-"
+    isempty(plus_ids) && return nothing
 
     idx = rand(plus_ids)
 
-    return chromo[1: idx - 1] * chromo[idx + 1: end]
+    return chromo[1:idx-1] * chromo[idx+1:end]
 end
 
-function crossover(chromo1::String, chromo2::String)::String
-    event1 = rand(findall(l -> isletter(l) || l == '(', collect(chromo1)))
-    event2 = rand(findall(l -> isletter(l) || l == '(', collect(chromo2)))
+function crossover(chromo1::String, chromo2::String)::Union{String,Nothing}
+    event1_idx = rand(findall(e -> isletter(e) || e == '(', collect(chromo1)))
+    event2_idx = rand(findall(e -> isletter(e) || e == '(', collect(chromo2)))
 
-    sub_chromo1 = if chromo1[event1] == '('
-        _, _, r_bracket, plus = find_brackets(chromo1, event1)
+    sub_chromo1 = if chromo1[event1_idx] == '('
+        _, _, r_bracket, plus = find_brackets(chromo1, event1_idx)
         if plus
             r_bracket += 1
         end
-        chromo1[1: event1 - 1] * chromo1[r_bracket + 1: end]
+        chromo1[r_bracket+1:end]
     else
-        chromo1[1: event1 - 1] * chromo1[event1 + 1: end]
+        chromo1[event1_idx+1:end]
     end
-    event1 -= 1
+    sub_chromo1 = chromo1[1:event1_idx-1] * sub_chromo1
+    event1_idx -= 1
 
-    sub_chromo2 = if chromo2[event2] == '('
-        _, _, r_bracket, plus = find_brackets(chromo2, event2)
+    sub_chromo2 = if chromo2[event2_idx] == '('
+        _, _, r_bracket, plus = find_brackets(chromo2, event2_idx)
         if plus
             r_bracket += 1
         end
-        chromo2[event2: r_bracket]
+        chromo2[event2_idx:r_bracket]
     else
-        chromo2[event2]
+        chromo2[event2_idx]
     end
 
     return if isempty(sub_chromo1) && isempty(sub_chromo2)
-         string(chromo1)
+        nothing
     elseif isempty(sub_chromo1)
-         string(sub_chromo2)
+        string(sub_chromo2)
     elseif isempty(sub_chromo2)
-         string(sub_chromo1)
+        string(sub_chromo1)
     else
-         sub_chromo1[1: event1] * sub_chromo2 * sub_chromo1[event1 + 1: end]
+        sub_chromo1[1:event1_idx] * sub_chromo2 * sub_chromo1[event1_idx+1:end]
     end
 end
 
 function find_brackets(chromo::String, idx::Int)
-   left_bracket, pipe, right_bracket = nothing, nothing, nothing
+    left_bracket, pipe, right_bracket = nothing, nothing, nothing
 
     bracket_counter = 0
     for i = idx:length(chromo)
@@ -194,34 +193,38 @@ function find_brackets(chromo::String, idx::Int)
     return left_bracket, pipe, right_bracket, plus_presence
 end
 
-function init_population(letters::String, population_size::Int)::Vector{String}
+function init_population(events::String, population_size::Int)::Vector{String}
     population = Vector{String}()
 
     while length(population) < population_size
-        chromo_size = rand(MIN_CHROMO_SIZE:MAX_CHROMO_SIZE)
-        push!(population, join(sample(collect(letters), chromo_size)))
+        chromo_size = rand(MIN_CHROMO_SIZE:INITIAL_MAX_CHROMO_SIZE)
+        push!(population, join(sample(collect(events), chromo_size)))
     end
 
     return population
 end
 
-function mutate(new_population::Vector{String}, old_population::Vector{String})::Vector{String}
+function mutate(
+    new_population::Vector{String},
+    old_population::Vector{String},
+)::Vector{String}
     while length(new_population) <= POPULATION_SIZE
         chromo = rand(old_population)
+
         evolution_chance = rand()
         new_chromo = if evolution_chance <= CROSSOVER_RATE
             crossover(chromo, rand(old_population))
         else
             mutation = sample(
                 collect(keys(ALL_MUTATIONS)),
-                Weights(collect(values(ALL_MUTATIONS)))
+                Weights(collect(values(ALL_MUTATIONS))),
             )
             if mutation == ADD_EVENT
-                add_event(chromo, LETTERS)
+                add_event(chromo, EVENTS)
             elseif mutation == REMOVE_EVENT
                 remove_event(chromo)
             elseif mutation == ADD_BRANCH
-                add_branch(chromo, LETTERS)
+                add_branch(chromo, EVENTS)
             elseif mutation == REMOVE_BRANCH
                 remove_branch(chromo)
             elseif mutation == ADD_LOOP
@@ -233,6 +236,10 @@ function mutate(new_population::Vector{String}, old_population::Vector{String}):
             end
         end
 
+        if new_chromo == nothing
+            @debug "Unable to mutate: '$(mutation)': '$(chromo)'"
+            continue
+        end
         try
             Regex(new_chromo)
             if length(new_chromo) >= MIN_CHROMO_SIZE
