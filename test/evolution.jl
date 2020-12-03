@@ -1,6 +1,7 @@
 include("../src/evolution.jl")
 
-using evolution: find_brackets
+using Test
+using .evolution: find_brackets
 
 @testset "Find brackets function" begin
     @testset "a(b|c)" begin
