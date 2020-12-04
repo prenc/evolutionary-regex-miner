@@ -25,13 +25,11 @@ function score(regex::String, logs::Vector{String})::Float64
     fitness = mean(log_fitness)
 
     event_number = 0
-    branch_number = 0
+    branch_number = sum(get_bracket_levels(regex))
     loop_number = 0
 
     for idx = 1:length(regex)
-        if regex[idx] == '('
-            branch_number += 1
-        elseif regex[idx] == '+'
+        if regex[idx] == '+'
             loop_number += 1
         elseif isletter(regex[idx])
             event_number += 1
@@ -49,6 +47,23 @@ end
 
 function score_population(population::Vector{String}, logs::Vector{String})
     return map(chromo -> Pair(chromo, score(chromo, logs)), population)
+end
+
+function get_bracket_levels(chromo::String)::Vector{Int}
+    bracket_levels = Vector{Int}()
+    regex = collect(chromo)
+
+    level_counter = 1
+    for e in regex
+        if e == '('
+            push!(bracket_levels, level_counter)
+            level_counter += 1
+        elseif e == ')'
+            level_counter -= 1
+        end
+    end
+
+    return bracket_levels
 end
 
 end
