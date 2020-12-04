@@ -10,38 +10,41 @@ using DataStructures: OrderedDict
 using .scoring
 using .evolution
 
-lines = readlines(LOG_FILE)
+import .evolution: add_event, add_branch, add_loop, crossover
+
+logs = readlines(LOG_FILE)
+letters = join(unique(join(logs)))
 
 println("FOR PRESENTATION PURPOSES")
 println("#########################")
 
 println("Initial regex: ", EXAMPLE_REGEX)
-println("Score: ", score(EXAMPLE_REGEX, lines))
+println("Score: ", score(EXAMPLE_REGEX, logs))
 
 println()
-println("add loop:")
-for _ in 1:5
+println("Add event:")
+
+for _ = 1:5
+    println(add_event(EXAMPLE_REGEX, letters))
+end
+
+println()
+println("Add branch:")
+
+for _ = 1:5
+    println(add_branch(EXAMPLE_REGEX, letters))
+end
+
+println()
+println("Add loop:")
+for _ = 1:5
     println(add_loop(EXAMPLE_REGEX))
 end
 
 println()
-println("add branch:")
+println("Crossover:")
 
-for _ in 1:5
-    println(add_branch(EXAMPLE_REGEX, LETTERS))
-end
-
-println()
-println("add state:")
-
-for _ in 1:5
-    println(add_state(EXAMPLE_REGEX, LETTERS))
-end
-
-println()
-println("crossover:")
-
-for _ in 1:5
+for _ = 1:5
     println(crossover(EXAMPLE_REGEX, "ab(d(a|g)|(a|g)c)+"))
 end
 
@@ -50,12 +53,11 @@ println()
 # algorithm
 println("Actual algorithm")
 
-old_population = init_population(LETTERS, POPULATION_SIZE)
+old_population = init_population(letters, POPULATION_SIZE)
 
-# todo change to SortedDict which sorts by value
-top_rank_list = OrderedDict{String,Float64}(score_population(old_population, lines))
+top_rank_list = OrderedDict{String,Float64}(score_population(old_population, logs))
 
-for i in 1:ITERATION_NUMBER
+for i = 1:ITERATION_NUMBER
     println("[GENERATION $(i)]")
     global top_rank_list, old_population
 
@@ -72,18 +74,18 @@ for i in 1:ITERATION_NUMBER
         end
     end
 
-    new_population = mutate(new_population, old_population)
+    new_population = mutate(new_population, old_population, letters)
 
-    new_scores = score_population(new_population, lines)
+    new_scores = score_population(new_population, logs)
 
-    top_rank_list = OrderedDict(
-        sort(
-            vcat(collect(pairs(top_rank_list)), new_scores),
-            by = x -> x[2]
-       )
-    )
+    for (chromo, score) in new_scores
+        if !(chromo in keys(top_rank_list))
+            top_rank_list[chromo] = score
+        end
+    end
+    sort!(top_rank_list, byvalue = true)
 
-    while length(top_rank_list) >= TOP_LIST_SIZE
+    while length(top_rank_list) > TOP_LIST_SIZE
         pop!(top_rank_list)
     end
 
