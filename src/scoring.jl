@@ -1,10 +1,10 @@
 module scoring
 
+export score, score_population
+
 include("parameters.jl")
 
 using Statistics
-
-export score, score_population
 
 function score(regex::String, logs::Vector{String})::Float64
 
@@ -18,16 +18,29 @@ function score(regex::String, logs::Vector{String})::Float64
                 1 - findmax(map(m -> length(m.match), matches))[1] / length(log),
             )
         catch e
-            @debug "Regex failed due to its complexity: '$(regex)'"
+            @debug "Chromosome too complex: '$(regex)'"
         end
     end
 
     fitness = mean(log_fitness)
 
-    precision = 0 # to be added
+    event_number = 0
+    branch_number = 0
+    loop_number = 0
 
-    simplicity =
-        length(findall(l -> isletter(l) || l == '+', collect(regex))) * STATE_PENALTY
+    for idx = 1:length(regex)
+        if regex[idx] == '('
+            branch_number += 1
+        elseif regex[idx] == '+'
+            loop_number += 1
+        elseif isletter(regex[idx])
+            event_number += 1
+        end
+    end
+
+    precision = branch_number * BRANCH_PENALTY + loop_number * LOOP_PENALTY
+
+    simplicity = event_number * EVENT_PENALTY
 
     @debug "Score '$(regex)': fitness: '$(fitness)'," *
            " precision: '$(precision)', simplicity: '$(simplicity)'"

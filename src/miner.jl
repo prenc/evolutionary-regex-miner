@@ -13,6 +13,7 @@ using .evolution
 import .evolution: add_event, add_branch, add_loop, crossover
 
 logs = readlines(LOG_FILE)
+letters = join(unique(join(logs)))
 
 println("FOR PRESENTATION PURPOSES")
 println("#########################")
@@ -24,14 +25,14 @@ println()
 println("Add event:")
 
 for _ = 1:5
-    println(add_event(EXAMPLE_REGEX, EVENTS))
+    println(add_event(EXAMPLE_REGEX, letters))
 end
 
 println()
 println("Add branch:")
 
 for _ = 1:5
-    println(add_branch(EXAMPLE_REGEX, EVENTS))
+    println(add_branch(EXAMPLE_REGEX, letters))
 end
 
 println()
@@ -52,7 +53,7 @@ println()
 # algorithm
 println("Actual algorithm")
 
-old_population = init_population(EVENTS, POPULATION_SIZE)
+old_population = init_population(letters, POPULATION_SIZE)
 
 top_rank_list = OrderedDict{String,Float64}(score_population(old_population, logs))
 
@@ -73,12 +74,14 @@ for i = 1:ITERATION_NUMBER
         end
     end
 
-    new_population = mutate(new_population, old_population)
+    new_population = mutate(new_population, old_population, letters)
 
     new_scores = score_population(new_population, logs)
 
     for (chromo, score) in new_scores
-        top_rank_list[chromo] = score
+        if !(chromo in keys(top_rank_list))
+            top_rank_list[chromo] = score
+        end
     end
     sort!(top_rank_list, byvalue = true)
 

@@ -1,4 +1,4 @@
-const ITERATION_NUMBER = 3
+const ITERATION_NUMBER = 1000
 
 const POPULATION_SIZE = 100
 const REPRODUCTION_SIZE = 25
@@ -13,17 +13,19 @@ const ADD_EVENT_RATE = 2
 const REMOVE_EVENT_RATE = 2
 const ADD_BRANCH_RATE = 3
 const REMOVE_BRANCH_RATE = 8
-const ADD_LOOP_RATE = 1
-const REMOVE_LOOP_RATE = 4
+const ADD_LOOP_RATE = 0
+const REMOVE_LOOP_RATE = 0
 
 const MIN_CHROMO_SIZE = 3
 const INITIAL_MAX_CHROMO_SIZE = 6
 
 # scoring
-const STATE_PENALTY = 0.03
+
+const EVENT_PENALTY = .03
+const BRANCH_PENALTY = .05
+const LOOP_PENALTY = 0.08
 
 const LOG_FILE = "logs/example7.txt"
-const EVENTS = "abcdefgh"
 
 const EXAMPLE_REGEX = "d(b|c)e"
 
