@@ -1,81 +1,144 @@
 include("../src/evolution.jl")
 
 using Test
-using .evolution: find_brackets
+using .evolution: remove_event, add_branch, find_brackets
+
+@testset "Remove event mutation" begin
+    @testset "abcde" begin
+        @test "bcde" == remove_event("abcde", idx = 1)
+        @test "acde" == remove_event("abcde", idx = 2)
+        @test "abde" == remove_event("abcde", idx = 3)
+        @test "abce" == remove_event("abcde", idx = 4)
+        @test "abcd" == remove_event("abcde", idx = 5)
+    end
+
+    @testset "(a|b)" begin
+        @test "b" == remove_event("(a|b)", idx = 2)
+        @test "a" == remove_event("(a|b)", idx = 4)
+    end
+
+    @testset "(a+|b)+" begin
+        @test "b" == remove_event("(a+|b)+", idx = 2)
+        @test "a+" == remove_event("(a+|b)+", idx = 5)
+    end
+
+    @testset "(abc|b)+" begin
+        @test "b" == remove_event("(abc|b)+", idx = 2)
+        @test "(ac|b)+" == remove_event("(abc|b)+", idx = 3)
+        @test "b" == remove_event("(abc|b)+", idx = 4)
+        @test "abc" == remove_event("(abc|b)+", idx = 6)
+    end
+
+    @testset "[ab]{2}" begin
+        @test "b" == remove_event("[ab]{2}", idx = 2)
+        @test "a" == remove_event("[ab]{2}", idx = 3)
+    end
+
+    @testset "a[bcd]{2}e" begin
+        @test "[bcd]{2}e" == remove_event("a[bcd]{2}e", idx = 1)
+        @test "a[cd]{2}e" == remove_event("a[bcd]{2}e", idx = 3)
+        @test "a[bd]{2}e" == remove_event("a[bcd]{2}e", idx = 4)
+        @test "a[bc]{2}e" == remove_event("a[bcd]{2}e", idx = 5)
+        @test "a[bcd]{2}" == remove_event("a[bcd]{2}e", idx = 10)
+    end
+end
+
+@testset "Add branch mutation" begin
+    @testset "a" begin
+        @test "(a|b)" == add_branch("a", "b", idx = 1)
+    end
+
+    @testset "a+" begin
+        @test "(a|b)+" == add_branch("a+", "b", idx = 1)
+    end
+
+    @testset "a(b|c)d" begin
+        @test "(a|e)(b|c)d" == add_branch("a(b|c)d", "e", idx = 1)
+        @test "a((b|e)|c)d" == add_branch("a(b|c)d", "e", idx = 3)
+        @test "a(b|(c|e))d" == add_branch("a(b|c)d", "e", idx = 5)
+        @test "a(b|c)(d|e)" == add_branch("a(b|c)d", "e", idx = 7)
+    end
+
+    @testset "(ab|c)" begin
+        @test "((a|e)b|c)" == add_branch("(ab|c)", "e", idx = 2)
+        @test "(a(b|e)|c)" == add_branch("(ab|c)", "e", idx = 3)
+        @test "(ab|(c|e))" == add_branch("(ab|c)", "e", idx = 5)
+    end
+
+    @testset "a[bc]{2}d" begin
+        @test "(a|e)[bc]{2}d" == add_branch("a[bc]{2}d", "e", idx = 1)
+        @test "a[bc]{2}(d|e)" == add_branch("a[bc]{2}d", "e", idx = 9)
+    end
+end
 
 @testset "Find brackets function" begin
     @testset "a(b|c)" begin
-        regex = "a(b|c)"
-        @test (nothing, nothing, nothing, nothing) == find_brackets(regex, 1)
-        @test (2, 4, 6, false) == find_brackets(regex, 2)
-        @test (2, 4, 6, false) == find_brackets(regex, 3)
-        @test (2, 4, 6, false) == find_brackets(regex, 4)
-        @test (2, 4, 6, false) == find_brackets(regex, 5)
-        @test (2, 4, 6, false) == find_brackets(regex, 6)
+        @test (nothing, nothing, nothing, nothing) == find_brackets("a(b|c)", 1)
+        @test (2, 4, 6, false) == find_brackets("a(b|c)", 2)
+        @test (2, 4, 6, false) == find_brackets("a(b|c)", 3)
+        @test (2, 4, 6, false) == find_brackets("a(b|c)", 4)
+        @test (2, 4, 6, false) == find_brackets("a(b|c)", 5)
+        @test (2, 4, 6, false) == find_brackets("a(b|c)", 6)
     end
 
     @testset "a(b+|c)" begin
-        regex = "a(b+|c)"
-        @test (nothing, nothing, nothing, nothing) == find_brackets(regex, 1)
-        @test (2, 5, 7, false) == find_brackets(regex, 2)
-        @test (2, 5, 7, false) == find_brackets(regex, 3)
-        @test (2, 5, 7, false) == find_brackets(regex, 4)
-        @test (2, 5, 7, false) == find_brackets(regex, 5)
-        @test (2, 5, 7, false) == find_brackets(regex, 6)
-        @test (2, 5, 7, false) == find_brackets(regex, 7)
+        @test (nothing, nothing, nothing, nothing) == find_brackets("a(b+|c)", 1)
+        @test (2, 5, 7, false) == find_brackets("a(b+|c)", 2)
+        @test (2, 5, 7, false) == find_brackets("a(b+|c)", 3)
+        @test (2, 5, 7, false) == find_brackets("a(b+|c)", 4)
+        @test (2, 5, 7, false) == find_brackets("a(b+|c)", 5)
+        @test (2, 5, 7, false) == find_brackets("a(b+|c)", 6)
+        @test (2, 5, 7, false) == find_brackets("a(b+|c)", 7)
     end
 
     @testset "(a|(b|(c|d)))" begin
-        regex = "(a|(b|(c|d)))"
-        @test (1, 3, 13, false) == find_brackets(regex, 1)
-        @test (1, 3, 13, false) == find_brackets(regex, 2)
-        @test (1, 3, 13, false) == find_brackets(regex, 3)
-        @test (4, 6, 12, false) == find_brackets(regex, 4)
-        @test (4, 6, 12, false) == find_brackets(regex, 5)
-        @test (4, 6, 12, false) == find_brackets(regex, 6)
-        @test (7, 9, 11, false) == find_brackets(regex, 7)
-        @test (7, 9, 11, false) == find_brackets(regex, 8)
-        @test (7, 9, 11, false) == find_brackets(regex, 9)
-        @test (7, 9, 11, false) == find_brackets(regex, 10)
-        @test (7, 9, 11, false) == find_brackets(regex, 11)
-        @test (4, 6, 12, false) == find_brackets(regex, 12)
-        @test (1, 3, 13, false) == find_brackets(regex, 13)
+        @test (1, 3, 13, false) == find_brackets("(a|(b|(c|d)))", 1)
+        @test (1, 3, 13, false) == find_brackets("(a|(b|(c|d)))", 2)
+        @test (1, 3, 13, false) == find_brackets("(a|(b|(c|d)))", 3)
+        @test (4, 6, 12, false) == find_brackets("(a|(b|(c|d)))", 4)
+        @test (4, 6, 12, false) == find_brackets("(a|(b|(c|d)))", 5)
+        @test (4, 6, 12, false) == find_brackets("(a|(b|(c|d)))", 6)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d)))", 7)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d)))", 8)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d)))", 9)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d)))", 10)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d)))", 11)
+        @test (4, 6, 12, false) == find_brackets("(a|(b|(c|d)))", 12)
+        @test (1, 3, 13, false) == find_brackets("(a|(b|(c|d)))", 13)
     end
 
     @testset "(a|(b|(c|d))+)" begin
-        regex = "(a|(b|(c|d))+)"
-        @test (1, 3, 14, false) == find_brackets(regex, 1)
-        @test (1, 3, 14, false) == find_brackets(regex, 2)
-        @test (1, 3, 14, false) == find_brackets(regex, 3)
-        @test (4, 6, 12, true) == find_brackets(regex, 4)
-        @test (4, 6, 12, true) == find_brackets(regex, 5)
-        @test (4, 6, 12, true) == find_brackets(regex, 6)
-        @test (7, 9, 11, false) == find_brackets(regex, 7)
-        @test (7, 9, 11, false) == find_brackets(regex, 8)
-        @test (7, 9, 11, false) == find_brackets(regex, 9)
-        @test (7, 9, 11, false) == find_brackets(regex, 10)
-        @test (7, 9, 11, false) == find_brackets(regex, 11)
-        @test (4, 6, 12, true) == find_brackets(regex, 12)
-        @test (4, 6, 12, true) == find_brackets(regex, 13)
-        @test (1, 3, 14, false) == find_brackets(regex, 14)
+        @test (1, 3, 14, false) == find_brackets("(a|(b|(c|d))+)", 1)
+        @test (1, 3, 14, false) == find_brackets("(a|(b|(c|d))+)", 2)
+        @test (1, 3, 14, false) == find_brackets("(a|(b|(c|d))+)", 3)
+        @test (4, 6, 12, true) == find_brackets("(a|(b|(c|d))+)", 4)
+        @test (4, 6, 12, true) == find_brackets("(a|(b|(c|d))+)", 5)
+        @test (4, 6, 12, true) == find_brackets("(a|(b|(c|d))+)", 6)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d))+)", 7)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d))+)", 8)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d))+)", 9)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d))+)", 10)
+        @test (7, 9, 11, false) == find_brackets("(a|(b|(c|d))+)", 11)
+        @test (4, 6, 12, true) == find_brackets("(a|(b|(c|d))+)", 12)
+        @test (4, 6, 12, true) == find_brackets("(a|(b|(c|d))+)", 13)
+        @test (1, 3, 14, false) == find_brackets("(a|(b|(c|d))+)", 14)
     end
 
     @testset "((a|b)+|(c|d))+" begin
-        regex = "((a|b)+|(c|d))+"
-        @test (1, 8, 14, true) == find_brackets(regex, 1)
-        @test (2, 4, 6, true) == find_brackets(regex, 2)
-        @test (2, 4, 6, true) == find_brackets(regex, 3)
-        @test (2, 4, 6, true) == find_brackets(regex, 4)
-        @test (2, 4, 6, true) == find_brackets(regex, 5)
-        @test (2, 4, 6, true) == find_brackets(regex, 6)
-        @test (2, 4, 6, true) == find_brackets(regex, 7)
-        @test (1, 8, 14, true) == find_brackets(regex, 8)
-        @test (9, 11, 13, false) == find_brackets(regex, 9)
-        @test (9, 11, 13, false) == find_brackets(regex, 10)
-        @test (9, 11, 13, false) == find_brackets(regex, 11)
-        @test (9, 11, 13, false) == find_brackets(regex, 12)
-        @test (9, 11, 13, false) == find_brackets(regex, 13)
-        @test (1, 8, 14, true) == find_brackets(regex, 14)
-        @test (1, 8, 14, true) == find_brackets(regex, 15)
+        @test (1, 8, 14, true) == find_brackets("((a|b)+|(c|d))+", 1)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 2)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 3)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 4)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 5)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 6)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 7)
+        @test (1, 8, 14, true) == find_brackets("((a|b)+|(c|d))+", 8)
+        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 9)
+        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 10)
+        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 11)
+        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 12)
+        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 13)
+        @test (1, 8, 14, true) == find_brackets("((a|b)+|(c|d))+", 14)
+        @test (1, 8, 14, true) == find_brackets("((a|b)+|(c|d))+", 15)
     end
 end
