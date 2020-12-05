@@ -27,16 +27,19 @@ function score(regex::String, logs::Vector{String})::Float64
     event_number = 0
     branch_number = sum(get_bracket_levels(regex))
     loop_number = 0
+    and_number = 0
 
     for idx = 1:length(regex)
         if regex[idx] == '+'
             loop_number += 1
         elseif isletter(regex[idx])
             event_number += 1
+        elseif regex[idx] == '['
+            and_number += 1
         end
     end
 
-    precision = branch_number * BRANCH_PENALTY + loop_number * LOOP_PENALTY
+    precision = branch_number * BRANCH_PENALTY + loop_number * LOOP_PENALTY + and_number * AND_PENALTY
 
     simplicity = event_number * EVENT_PENALTY
 
