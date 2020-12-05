@@ -185,36 +185,48 @@ function remove_and(chromo::String; idx = nothing)::Union{String,Nothing}
     return chromo[1:idx-1] * chromo[idx+1:r_bracket-1] * chromo[r_bracket+4:end]
 end
 
-function crossover(chromo1::String, chromo2::String)::Union{String,Nothing}
-    event1_idx = rand(findall(e -> isletter(e) || e == '(', collect(chromo1)))
-    event2_idx = rand(findall(e -> isletter(e) || e == '(', collect(chromo2)))
+function crossover(chromo1::String, chromo2::String; idx1 = nothing, idx2 = nothing)::Union{String,Nothing}
+    if idx1 == nothing
+        idx1 = rand(findall(e -> isletter(e) || occursin(e, "[("), collect(chromo1)))
+    end
+    if idx2 == nothing
+        idx2 = rand(findall(e -> isletter(e) || occursin(e, "[("), collect(chromo2)))
+    end
 
-    sub_chromo1 = if chromo1[event1_idx] == '('
-        _, _, r_bracket, plus = find_brackets(chromo1, event1_idx)
+    sub_chromo1 = if chromo1[idx1] == '('
+        _, _, r_bracket, plus = find_brackets(chromo1, idx1)
         if plus
             r_bracket += 1
         end
         chromo1[r_bracket+1:end]
+    elseif chromo1[idx1] == '['
+        r_and = findfirst(e -> e == '}', chromo1[idx1+6:end]) + length(chromo1[1:idx1+5])
+        chromo1[r_and+1:end]
     else
-        chromo1[event1_idx+1:end]
+        r_shift = idx1 < length(chromo1) && chromo1[idx1+1] == '+' ? 2 : 1
+        chromo1[idx1+r_shift:end]
     end
-    sub_chromo1 = chromo1[1:event1_idx-1] * sub_chromo1
-    event1_idx -= 1
+    sub_chromo1 = chromo1[1:idx1-1] * sub_chromo1
+    idx1 -= 1
 
-    sub_chromo2 = if chromo2[event2_idx] == '('
-        _, _, r_bracket, plus = find_brackets(chromo2, event2_idx)
+    sub_chromo2 = if chromo2[idx2] == '('
+        _, _, r_bracket, plus = find_brackets(chromo2, idx2)
         if plus
             r_bracket += 1
         end
-        chromo2[event2_idx:r_bracket]
+        chromo2[idx2:r_bracket]
+    elseif chromo2[idx2] == '['
+        r_and = findfirst(e -> e == '}', chromo2[idx2+6:end]) + length(chromo2[1:idx2+5])
+        chromo2[idx2:r_and]
     else
-        chromo2[event2_idx]
+        r_shift = idx2 < length(chromo2) && chromo2[idx2+1] == '+' ? 1 : 0
+        chromo2[idx2:idx2+r_shift]
     end
 
     return if isempty(sub_chromo1)
         string(sub_chromo2)
     else
-        sub_chromo1[1:event1_idx] * sub_chromo2 * sub_chromo1[event1_idx+1:end]
+        sub_chromo1[1:idx1] * sub_chromo2 * sub_chromo1[idx1+1:end]
     end
 end
 

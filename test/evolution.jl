@@ -1,7 +1,7 @@
 include("../src/evolution.jl")
 
 using Test
-using .evolution: remove_event, add_branch, find_brackets
+using .evolution: remove_event, add_branch, crossover, find_brackets
 
 @testset "Remove event mutation" begin
     @testset "abcde" begin
@@ -71,7 +71,58 @@ end
     end
 end
 
-@testset "Find brackets function" begin
+@testset "Crossover" begin
+    @testset "a(b|c) and d(e|f)" begin
+        @test "d(b|c)" == crossover("a(b|c)", "d(e|f)", idx1 = 1, idx2 = 1)
+        @test "(e|f)(b|c)" == crossover("a(b|c)", "d(e|f)", idx1 = 1, idx2 = 2)
+        @test "e(b|c)" == crossover("a(b|c)", "d(e|f)", idx1 = 1, idx2 = 3)
+        @test "f(b|c)" == crossover("a(b|c)", "d(e|f)", idx1 = 1, idx2 = 5)
+
+        @test "ad" == crossover("a(b|c)", "d(e|f)", idx1 = 2, idx2 = 1)
+
+        @test "a((e|f)|c)" == crossover("a(b|c)", "d(e|f)", idx1 = 3, idx2 = 2)
+    end
+
+    @testset "a(b|c+)+ and d(e+|f)+" begin
+        @test "d(b|c+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 1, idx2 = 1)
+        @test "(e+|f)+(b|c+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 1, idx2 = 2)
+        @test "e+(b|c+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 1, idx2 = 3)
+        @test "f(b|c+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 1, idx2 = 6)
+        @test "ad" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 2, idx2 = 1)
+        @test "a(e+|f)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 2, idx2 = 2)
+        @test "ae+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 2, idx2 = 3)
+        @test "af" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 2, idx2 = 6)
+        @test "a(d|c+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 3, idx2 = 1)
+        @test "a((e+|f)+|c+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 3, idx2 = 2)
+        @test "a(e+|c+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 3, idx2 = 3)
+        @test "a(f|c+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 3, idx2 = 6)
+        @test "a(b|d)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 5, idx2 = 1)
+        @test "a(b|(e+|f)+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 5, idx2 = 2)
+        @test "a(b|e+)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 5, idx2 = 3)
+        @test "a(b|f)+" == crossover("a(b|c+)+", "d(e+|f)+", idx1 = 5, idx2 = 6)
+    end
+
+    @testset "(a|[bc]{2})d and (e+|f)+[gh]{2}" begin
+        @test "(e+|f)+d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 1, idx2 = 1)
+        @test "e+d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 1, idx2 = 2)
+        @test "fd" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 1, idx2 = 5)
+        @test "[gh]{2}d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 1, idx2 = 8)
+        @test "((e+|f)+|[bc]{2})d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 2, idx2 = 1)
+        @test "(e+|[bc]{2})d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 2, idx2 = 2)
+        @test "(f|[bc]{2})d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 2, idx2 = 5)
+        @test "([gh]{2}|[bc]{2})d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 2, idx2 = 8)
+        @test "(a|(e+|f)+)d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 4, idx2 = 1)
+        @test "(a|e+)d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 4, idx2 = 2)
+        @test "(a|f)d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 4, idx2 = 5)
+        @test "(a|[gh]{2})d" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 4, idx2 = 8)
+        @test "(a|[bc]{2})(e+|f)+" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 12, idx2 = 1)
+        @test "(a|[bc]{2})e+" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 12, idx2 = 2)
+        @test "(a|[bc]{2})f" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 12, idx2 = 5)
+        @test "(a|[bc]{2})[gh]{2}" == crossover("(a|[bc]{2})d", "(e+|f)+[gh]{2}", idx1 = 12, idx2 = 8)
+    end
+end
+
+@testset "Find branch indicies function" begin
     @testset "a(b|c)" begin
         @test (nothing, nothing, nothing, nothing) == find_brackets("a(b|c)", 1)
         @test (2, 4, 6, false) == find_brackets("a(b|c)", 2)
