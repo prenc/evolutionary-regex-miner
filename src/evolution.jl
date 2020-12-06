@@ -89,14 +89,14 @@ function add_branch(chromo::String, events::String; idx = nothing)::Union{String
     event = rand(events)
 
     event_ids = Vector{Int}()
-    can_add = true
+    inside_and = false
     for i in 1:length(chromo)
-        if can_add && isletter(chromo[i]) && chromo[i] != event
+        if !inside_and && isletter(chromo[i]) && chromo[i] != event
             push!(event_ids, i)
         elseif chromo[i] == '['
-            can_add = false
+            inside_and = false
         elseif chromo[i] == '}'
-            can_add = true
+            inside_and = true
         end
     end
 
@@ -109,6 +109,7 @@ function add_branch(chromo::String, events::String; idx = nothing)::Union{String
 end
 
 function remove_branch(chromo::String; idx = nothing)::Union{String,Nothing}
+    println(chromo)
     bracket_ids = findall(l -> l == '(', chromo)
     isempty(bracket_ids) && return nothing
 
@@ -156,9 +157,20 @@ function remove_loop(chromo::String; idx = nothing)::Union{String,Nothing}
     return chromo[1:idx-1] * chromo[idx+1:end]
 end
 
-function add_and(chromo::String, events::String; idx = nothing)::String
+function add_and(chromo::String, events::String; idx = nothing)::Union{String,Nothing}
     if idx == nothing
-        event_ids = findall(isletter, chromo)
+        event_ids = Vector{Int}()
+        inside_and = false
+        for i in 1:length(chromo)
+            if isletter(chromo[i]) && !inside_and
+                push!(event_ids, i)
+            elseif chromo[i] == '['
+                inside_and = true
+            elseif chromo[i] == '}'
+                inside_and = false
+            end
+        end
+        isempty(event_ids) && return nothing
         idx = rand(event_ids)
     end
 
