@@ -1,7 +1,7 @@
 include("../src/evolution.jl")
 
 using Test
-using .evolution: remove_event, add_branch, crossover, find_brackets
+using .evolution: remove_event, add_branch_or, crossover, find_brackets
 
 @testset "Remove event mutation" begin
     @testset "abcde" begin
@@ -52,29 +52,29 @@ end
 
 @testset "Add branch mutation" begin
     @testset "a" begin
-        @test "(a|b)" == add_branch("a", "b", idx = 1)
+        @test "(a|b)" == add_branch_or("a", "b", idx = 1)
     end
 
     @testset "a+" begin
-        @test "(a|b)+" == add_branch("a+", "b", idx = 1)
+        @test "(a|b)+" == add_branch_or("a+", "b", idx = 1)
     end
 
     @testset "a(b|c)d" begin
-        @test "(a|e)(b|c)d" == add_branch("a(b|c)d", "e", idx = 1)
-        @test "a((b|e)|c)d" == add_branch("a(b|c)d", "e", idx = 3)
-        @test "a(b|(c|e))d" == add_branch("a(b|c)d", "e", idx = 5)
-        @test "a(b|c)(d|e)" == add_branch("a(b|c)d", "e", idx = 7)
+        @test "(a|e)(b|c)d" == add_branch_or("a(b|c)d", "e", idx = 1)
+        @test "a((b|e)|c)d" == add_branch_or("a(b|c)d", "e", idx = 3)
+        @test "a(b|(c|e))d" == add_branch_or("a(b|c)d", "e", idx = 5)
+        @test "a(b|c)(d|e)" == add_branch_or("a(b|c)d", "e", idx = 7)
     end
 
     @testset "(ab|c)" begin
-        @test "((a|e)b|c)" == add_branch("(ab|c)", "e", idx = 2)
-        @test "(a(b|e)|c)" == add_branch("(ab|c)", "e", idx = 3)
-        @test "(ab|(c|e))" == add_branch("(ab|c)", "e", idx = 5)
+        @test "((a|e)b|c)" == add_branch_or("(ab|c)", "e", idx = 2)
+        @test "(a(b|e)|c)" == add_branch_or("(ab|c)", "e", idx = 3)
+        @test "(ab|(c|e))" == add_branch_or("(ab|c)", "e", idx = 5)
     end
 
     @testset "a[bc]{2}d" begin
-        @test "(a|e)[bc]{2}d" == add_branch("a[bc]{2}d", "e", idx = 1)
-        @test "a[bc]{2}(d|e)" == add_branch("a[bc]{2}d", "e", idx = 9)
+        @test "(a|e)[bc]{2}d" == add_branch_or("a[bc]{2}d", "e", idx = 1)
+        @test "a[bc]{2}(d|e)" == add_branch_or("a[bc]{2}d", "e", idx = 9)
     end
 end
 
