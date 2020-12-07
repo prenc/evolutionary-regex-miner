@@ -29,12 +29,12 @@ function score(regex::String, logs::Vector{String})::Float64
     loop_number = 0
     and_number = 0
 
-    for idx = 1:length(regex)
-        if regex[idx] == '+'
+    for c in regex
+        if c == '+'
             loop_number += 1
-        elseif isletter(regex[idx])
+        elseif isletter(c)
             event_number += 1
-        elseif regex[idx] == '['
+        elseif c == '['
             and_number += 1
         end
     end
@@ -54,10 +54,8 @@ end
 
 function get_bracket_levels(chromo::String)::Vector{Int}
     bracket_levels = Vector{Int}()
-    regex = collect(chromo)
-
     level_counter = 1
-    for e in regex
+    for e in chromo
         if e == '('
             push!(bracket_levels, level_counter)
             level_counter += 1
