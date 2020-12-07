@@ -5,8 +5,9 @@ export score, score_population
 include("parameters.jl")
 
 using Statistics
+using Base.Threads: @spawn, fetch
 
-function score(regex::String, logs::Vector{String})::Float64
+function score(regex::String, logs::Vector{String})::Pair{String,Pair{Float64,Float64}}
 
     log_fitness = Vector()
     for log in logs
@@ -45,11 +46,11 @@ function score(regex::String, logs::Vector{String})::Float64
 
     @debug "Score '$(regex)': fitness: '$(fitness)'," *
            " precision: '$(precision)', simplicity: '$(simplicity)'"
-    return fitness + precision + simplicity
+   return Pair(regex, Pair(fitness, precision + simplicity))
 end
 
 function score_population(population::Vector{String}, logs::Vector{String})
-    return map(chromo -> Pair(chromo, score(chromo, logs)), population)
+    return map(fetch, map(chromo -> @spawn(score(chromo, logs)), population))
 end
 
 function get_bracket_levels(chromo::String)::Vector{Int}

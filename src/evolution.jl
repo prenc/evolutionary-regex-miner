@@ -339,12 +339,19 @@ function find_brackets(chromo::String, idx::Int)
     return left_bracket, pipe, right_bracket, plus_present
 end
 
-function init_population(events::String, population_size::Int)::Vector{String}
+function init_population(events::String, population_size::Int, logs::Vector{String})::Vector{String}
     population = Vector{String}()
 
     while length(population) < population_size
         chromo_size = rand(MIN_CHROMO_SIZE:INITIAL_MAX_CHROMO_SIZE)
-        push!(population, join(sample(collect(events), chromo_size)))
+
+        random_log = rand(logs)
+        if length(random_log) <= chromo_size
+            push!(population, random_log)
+        else
+            idx = rand(1:length(random_log)-chromo_size)
+            push!(population, random_log[idx:idx+chromo_size])
+        end
     end
 
     return population
