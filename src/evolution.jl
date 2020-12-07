@@ -29,7 +29,7 @@ const ALL_MUTATIONS = Dict(
     REMOVE_AND => REMOVE_AND_RATE,
 )
 
-function add_event(chromo::String, events::String; idx = nothing)::String
+function add_event(chromo::String, events::String; idx = nothing)::Union{String,Nothing}
     if idx == nothing
         possible_ids = Vector{Int}()
         for (i, e) in enumerate(chromo)
@@ -46,50 +46,60 @@ function add_event(chromo::String, events::String; idx = nothing)::String
 
     event = rand(events)
 
-    return chromo[1:idx] * event * chromo[idx+1:end]
+    bracket_idx = findnext(e -> occursin(e, "[]"), chromo, idx + 1)
+    return if bracket_idx != nothing && chromo[bracket_idx] == ']'
+        l_bracket = findprev(e -> e == '[', chromo, idx)
+        and_content = chromo[l_bracket+1:bracket_idx-1]
+        occursin(event, and_content) && return nothing
+
+        chromo[1:l_bracket] *
+        join(sort(collect(and_content * event))) *
+        chromo[bracket_idx:end]
+    else
+        chromo[1:idx] * event * chromo[idx+1:end]
+    end
 end
 
 function remove_event(chromo::String; idx = nothing)::String
-    event = idx == nothing ? rand(findall(isletter, chromo)) : idx
-    r_event = event
+    idx = idx == nothing ? rand(findall(isletter, chromo)) : idx
+    r_idx = idx
 
-    if event < length(chromo) && chromo[event+1] == '+'
-        r_event += 1
+    if idx < length(chromo) && chromo[idx+1] == '+'
+        r_idx += 1
     end
 
-    return if (event > 1 && chromo[event-1] == '(') ||
-              (r_event < length(chromo) && chromo[r_event+1] == '|')
-        l_bracket, pipe, r_bracket, plus = find_brackets(chromo, event)
+    return if (idx > 1 && chromo[idx-1] == '(') ||
+              (r_idx < length(chromo) && chromo[r_idx+1] == '|')
+        l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
         r_shift = plus ? 2 : 1
 
         chromo[1:l_bracket-1] * chromo[pipe+1:r_bracket-1] * chromo[r_bracket+r_shift:end]
-    elseif (event > 1 && chromo[event-1] == '|') ||
-           (r_event < length(chromo) && chromo[r_event+1] == ')')
-        l_bracket, pipe, r_bracket, plus = find_brackets(chromo, event)
+    elseif (idx > 1 && chromo[idx-1] == '|') ||
+           (r_idx < length(chromo) && chromo[r_idx+1] == ')')
+        l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
         r_shift = plus ? 2 : 1
 
         chromo[1:l_bracket-1] * chromo[l_bracket+1:pipe-1] * chromo[r_bracket+r_shift:end]
-    elseif event > 1 && chromo[event-1] == '['
-        r_bracket = findfirst(e -> e == ']', chromo[event+1:end]) + length(chromo[1:event])
-        new_chromo = chromo[1:event-1] * chromo[event+1:end]
+    elseif idx > 1 && chromo[idx-1] == '['
+        r_bracket = findnext(e -> e == ']', chromo, idx + 1)
+        new_chromo = chromo[1:idx-1] * chromo[idx+1:end]
 
-        if r_bracket - event <= 2
-            remove_and(new_chromo, idx = event - 1)
+        if r_bracket - idx <= 2
+            remove_and(new_chromo, idx = idx - 1)
         else
             new_chromo
         end
-    elseif event < length(chromo) && chromo[event+1] == ']'
-        l_bracket =
-            length(chromo[1:event-1]) - findfirst(e -> e == '[', reverse(chromo[1:event-2]))
-        new_chromo = chromo[1:event-1] * chromo[event+1:end]
+    elseif idx < length(chromo) && chromo[idx+1] == ']'
+        l_bracket = findprev(e -> e == '[', chromo, idx - 2)
+        new_chromo = chromo[1:idx-1] * chromo[idx+1:end]
 
-        if event - l_bracket <= 2
+        if idx - l_bracket <= 2
             remove_and(new_chromo, idx = l_bracket)
         else
             new_chromo
         end
     else
-        chromo[1:event-1] * chromo[r_event+1:end]
+        chromo[1:idx-1] * chromo[r_idx+1:end]
     end
 end
 
