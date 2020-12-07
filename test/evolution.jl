@@ -41,6 +41,13 @@ using .evolution: remove_event, add_branch, crossover, find_brackets
         @test "a[bc]{2}e" == remove_event("a[bcd]{2}e", idx = 5)
         @test "a[bcd]{2}" == remove_event("a[bcd]{2}e", idx = 10)
     end
+
+    @testset "(a[bc]{2}|d)" begin
+        @test "d" == remove_event("(a[bc]{2}|d)", idx = 2)
+        @test "(ac|d)" == remove_event("(a[bc]{2}|d)", idx = 4)
+        @test "(ab|d)" == remove_event("(a[bc]{2}|d)", idx = 5)
+        @test "a[bc]{2}" == remove_event("(a[bc]{2}|d)", idx = 11)
+    end
 end
 
 @testset "Add branch mutation" begin
@@ -175,21 +182,26 @@ end
         @test (1, 3, 14, false) == find_brackets("(a|(b|(c|d))+)", 14)
     end
 
-    @testset "((a|b)+|(c|d))+" begin
-        @test (1, 8, 14, true) == find_brackets("((a|b)+|(c|d))+", 1)
-        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 2)
-        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 3)
-        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 4)
-        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 5)
-        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 6)
-        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|d))+", 7)
-        @test (1, 8, 14, true) == find_brackets("((a|b)+|(c|d))+", 8)
-        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 9)
-        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 10)
-        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 11)
-        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 12)
-        @test (9, 11, 13, false) == find_brackets("((a|b)+|(c|d))+", 13)
-        @test (1, 8, 14, true) == find_brackets("((a|b)+|(c|d))+", 14)
-        @test (1, 8, 14, true) == find_brackets("((a|b)+|(c|d))+", 15)
+    @testset "((a|b)+|(c|[de]{2}))+" begin
+        @test (1, 8, 20, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 1)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 2)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 3)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 4)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 5)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 6)
+        @test (2, 4, 6, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 7)
+        @test (1, 8, 20, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 8)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 9)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 10)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 11)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 12)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 13)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 14)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 15)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 16)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 17)
+        @test (9, 11, 19, false) == find_brackets("((a|b)+|(c|[de]{2}))+", 19)
+        @test (1, 8, 20, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 20)
+        @test (1, 8, 20, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 21)
     end
 end
