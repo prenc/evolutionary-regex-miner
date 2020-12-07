@@ -7,7 +7,7 @@ include("parameters.jl")
 using Statistics
 using Base.Threads: @spawn, fetch
 
-function score(regex::String, logs::Vector{String})::Pair{String,Pair{Float64,Float64}}
+function score(regex::String, logs::Vector{String})::Pair{String,Tuple{Float64,Float64}}
 
     log_fitness = Vector()
     for log in logs
@@ -46,7 +46,7 @@ function score(regex::String, logs::Vector{String})::Pair{String,Pair{Float64,Fl
 
     @debug "Score '$(regex)': fitness: '$(fitness)'," *
            " precision: '$(precision)', simplicity: '$(simplicity)'"
-   return Pair(regex, Pair(fitness, precision + simplicity))
+   return Pair(regex, (fitness, precision + simplicity))
 end
 
 function score_population(population::Vector{String}, logs::Vector{String})

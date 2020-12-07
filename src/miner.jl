@@ -16,10 +16,11 @@ letters = join(unique(join(logs)))
 
 old_population = init_population(letters, POPULATION_SIZE, logs)
 
-top_rank_list = OrderedDict{String,Pair{Float64,Float64}}(score_population(old_population, logs))
+top_rank_list = OrderedDict{String,Tuple{Float64,Float64}}(score_population(old_population, logs))
 sort!(top_rank_list, byvalue = true)
 
 for i in 1:ITERATION_NUMBER
+    println("GENERATION $(i)")
     global top_rank_list, old_population
 
     new_population = Vector{String}()
