@@ -4,7 +4,7 @@ const POPULATION_SIZE = 100
 const REPRODUCTION_SIZE = 25
 const TOP_LIST_SIZE = 25
 
-const CROSSOVER_RATE = 0.8
+const CROSSOVER_RATE = 0.7
 # MUTATION_RATE = 1 - CROSSOVER_RATE
 
 # mutation weights
@@ -21,7 +21,7 @@ const MIN_CHROMO_SIZE = 3
 const INITIAL_MAX_CHROMO_SIZE = 6
 
 # scoring
-const EVENT_PENALTY = 0.03
+const EVENT_PENALTY = 0.02
 const BRANCH_PENALTY = 0.05
 const LOOP_PENALTY = 0.08
 const AND_PENALTY = 0.04
