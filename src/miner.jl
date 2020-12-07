@@ -20,16 +20,11 @@ top_rank_list = OrderedDict{String,Pair{Float64,Float64}}(score_population(old_p
 sort!(top_rank_list, byvalue = true)
 
 for i in 1:ITERATION_NUMBER
-    println("[GENERATION $(i)]")
     global top_rank_list, old_population
 
     new_population = Vector{String}()
 
-    println("Top 5 chromosomes:")
     for (i, (chromo, penalty)) in enumerate(pairs(top_rank_list))
-        if i <= 5
-            @printf("'%s' => (%.3f, %.5f)\n", chromo, penalty[1], penalty[2])
-        end
         if length(new_population) <= REPRODUCTION_SIZE
             push!(new_population, chromo)
         else
@@ -53,6 +48,12 @@ for i in 1:ITERATION_NUMBER
     end
 
     old_population = new_population
+end
+
+for (i, (chromo, penalty)) in enumerate(pairs(top_rank_list))
+    if i <= 7
+        @printf("'%s' => (%.3f, %.5f)\n", chromo, penalty[1], penalty[2])
+    end
 end
 
 end
