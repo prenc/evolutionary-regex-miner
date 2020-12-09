@@ -268,14 +268,14 @@ function pull_out(chromo::String, idx = nothing)::Union{String,Nothing}
     r_shift = plus ? 2 : 1
 
     return if isletter(chromo[pipe+1]) && chromo[l_bracket+1] == chromo[pipe+1]
-        if pipe - l_bracket == 2 || r_bracket - pipe == 2 # remove branch
+        if pipe - l_bracket == 2 || r_bracket - pipe == 2 # remove or branch
             chromo[1:l_bracket-1] * chromo[pipe+1] * chromo[l_bracket+2:pipe-1] * chromo[pipe+2:r_bracket-1] *
             chromo[r_bracket+r_shift:end]
         else
             chromo[1:l_bracket-1] * chromo[pipe+1] * '(' * chromo[l_bracket+2:pipe] * chromo[pipe+2:end]
         end
     elseif isletter(chromo[pipe-1]) && chromo[pipe-1] == chromo[r_bracket-1]
-        if pipe - l_bracket == 2 || r_bracket - pipe == 2 # remove branch
+        if pipe - l_bracket == 2 || r_bracket - pipe == 2 # remove or branch
             chromo[1:l_bracket-1] * chromo[l_bracket+1:pipe-2] * chromo[pipe+1:r_bracket-2] *
             chromo[pipe-1] * chromo[r_bracket+r_shift:end]
         else
