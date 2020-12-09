@@ -1,7 +1,7 @@
 include("../src/evolution.jl")
 
 using Test
-using .evolution: remove_event, add_branch_or, crossover, find_brackets
+using .evolution: remove_event, add_branch_or, pull_out, crossover, find_brackets
 
 @testset "Remove event mutation" begin
     @testset "abcde" begin
@@ -82,6 +82,40 @@ end
         @test "(a|e)[bc]{2}d" == add_branch_or("a[bc]{2}d", "e", idx = 1)
         @test "a[bc]{2}(d|e)" == add_branch_or("a[bc]{2}d", "e", idx = 9)
     end
+end
+
+@testset "Pull out" begin
+    @test nothing == pull_out("(a[bc]{2}|d)", 1)
+    @test nothing == pull_out("(a[bc]{2}|(a|d))", 1)
+
+    @test nothing == pull_out("(a[bc]{2}|a+)", 1)
+    @test nothing == pull_out("(a+[bc]{2}|a)", 1)
+
+    @test "a[bc]{2}" == pull_out("(a[bc]{2}|a)", 1)
+    @test "[ab]{2}c" == pull_out("([ab]{2}c|c)", 1)
+
+    @test "a+[bc]{2}" == pull_out("(a+[bc]{2}|a+)", 1)
+    @test "[ab]{2}c+" == pull_out("([ab]{2}c+|c+)", 1)
+
+    @test "(a|[bc]{2})d" == pull_out("(ad|[ab]{2}d)", 1)
+    @test "a([bc]{2}|d)" == pull_out("(a[bc]{2}|ad)", 1)
+
+    @test "[ab]{2}cd" == pull_out("([ab]{2}|[ab]{2}cd)", 1)
+    @test "ab[cd]{2}" == pull_out("(ab[cd]{2}|[ab]{2})", 1)
+
+    @test "[ab]{2}+cd" == pull_out("([ab]{2}+|[ab]{2}+cd)", 1)
+    @test "ab[cd]{2}+" == pull_out("(ab[cd]{2}|[ab]{2}+)", 1)
+
+    @test "(a|b)cd" == pull_out("((a|b)|(a|b)cd)", 1)
+    @test "ab(c|d)" == pull_out("(ab(c|d)|(c|d))", 1)
+
+    @test "(a|b)+cd" == pull_out("((a|b)+|(a|b)+cd)", 1)
+    @test "ab(c|d)+" == pull_out("(ab(c|d)+|(c|d)+)", 1)
+
+    @test nothing == pull_out("((a|b)|(a|b)+cd)", 1)
+    @test nothing == pull_out("(ab(c|d)|(c|d)+)", 1)
+
+    @test "(ab|[cd]{2})([ef]{2}|gh)" == pull_out("((ab|[cd]{2})[ef]{2}|(ab|[cd]{2})gh)", 1)
 end
 
 @testset "Crossover" begin
