@@ -4,7 +4,7 @@ export init_population, mutate
 
 include("parameters.jl")
 
-using Random: rand
+using Random: rand, shuffle
 using StatsBase: sample, Weights
 
 @enum Mutation begin
@@ -149,9 +149,8 @@ end
 function add_loop(chromo::String; idx = nothing)::Union{String,Nothing}
     if idx == nothing
         possible_ids = Vector()
-        for (i, e) = enumerate(chromo)
-            if (isletter(e) || e == ')') &&
-               (i == length(chromo) || chromo[i+1] != '+')
+        for (i, e) in enumerate(chromo)
+            if (isletter(e) || e == ')') && (i == length(chromo) || chromo[i+1] != '+')
                 push!(possible_ids, i)
             end
         end
@@ -175,7 +174,11 @@ function remove_loop(chromo::String; idx = nothing)::Union{String,Nothing}
     return chromo[1:idx-1] * chromo[idx+1:end]
 end
 
-function add_branch_and(chromo::String, events::String; idx = nothing)::Union{String,Nothing}
+function add_branch_and(
+    chromo::String,
+    events::String;
+    idx = nothing,
+)::Union{String,Nothing}
     if idx == nothing
         possible_ids = Vector{Int}()
         inside_and = false
@@ -215,7 +218,9 @@ function remove_branch_and(chromo::String; idx = nothing)::Union{String,Nothing}
 
     r_bracket = findfirst(e -> e == ']', chromo[idx+2:end]) + length(chromo[1:idx+1])
 
-    return chromo[1:idx-1] * chromo[idx+1:r_bracket-1] * chromo[r_bracket+4:end]
+    return chromo[1:idx-1] *
+           join(shuffle(collect(chromo[idx+1:r_bracket-1]))) *
+           chromo[r_bracket+4:end]
 end
 
 function crossover(
@@ -339,7 +344,11 @@ function find_brackets(chromo::String, idx::Int)
     return left_bracket, pipe, right_bracket, plus_present
 end
 
-function init_population(events::String, population_size::Int, logs::Vector{String})::Vector{String}
+function init_population(
+    events::String,
+    population_size::Int,
+    logs::Vector{String},
+)::Vector{String}
     population = Vector{String}()
 
     while length(population) < population_size
