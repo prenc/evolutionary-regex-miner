@@ -52,7 +52,7 @@ for i in 1:ITERATION_NUMBER
 
     for (i, (chromo, penalty)) in enumerate(pairs(top_rank_list))
         if i <= 1
-            @printf("'%s' => (%.2f, %.2f)\n", chromo, penalty[1], penalty[2])
+            @printf("'%s' => (%.2f, %.2f)\n", chromo, penalty...)
         else
             break
         end

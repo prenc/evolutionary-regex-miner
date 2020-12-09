@@ -50,7 +50,7 @@ function score(regex::String, logs::Vector{String})
     end
 
     precision =
-        event_inside_and * EVENT_INSIDE_AND_PENALTY + 
+        event_inside_and * EVENT_INSIDE_AND_PENALTY +
         branch_or_number * BRANCH_PENALTY +
         branch_and_number * AND_PENALTY +
         loop_number * LOOP_PENALTY
