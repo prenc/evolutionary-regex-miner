@@ -204,4 +204,13 @@ end
         @test (1, 8, 20, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 20)
         @test (1, 8, 20, true) == find_brackets("((a|b)+|(c|[de]{2}))+", 21)
     end
+
+    @testset "(ab)+c" begin
+        @test (1, nothing, 4, true) == find_brackets("(ab)+c", 1)
+        @test (1, nothing, 4, true) == find_brackets("(ab)+c", 2)
+        @test (1, nothing, 4, true) == find_brackets("(ab)+c", 3)
+        @test (1, nothing, 4, true) == find_brackets("(ab)+c", 4)
+        @test (1, nothing, 4, true) == find_brackets("(ab)+c", 5)
+        @test (nothing, nothing, nothing, nothing) == find_brackets("(ab)+c", 6)
+    end
 end

@@ -137,29 +137,45 @@ function remove_branch_or(chromo::String; idx = nothing)::Union{String,Nothing}
 
     l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
 
-    left_branch = chromo[l_bracket+1:pipe-1]
-    right_branch = chromo[pipe+1:r_bracket-1]
+    branch = if pipe != nothing
+        left_branch = chromo[l_bracket+1:pipe-1]
+        right_branch = chromo[pipe+1:r_bracket-1]
+        rand([left_branch, right_branch])
+    else
+        chromo[l_bracket+1:r_bracket-1]
+    end
 
     r_shift = plus ? 1 : 0
-    return chromo[1:l_bracket-1] *
-           rand([left_branch, right_branch]) *
-           chromo[r_bracket+r_shift:end]
+    return chromo[1:l_bracket-1] * branch * chromo[r_bracket+r_shift:end]
 end
 
 function add_loop(chromo::String; idx = nothing)::Union{String,Nothing}
     if idx == nothing
-        possible_ids = Vector()
-        for (i, e) in enumerate(chromo)
-            if (isletter(e) || e == ')') && (i == length(chromo) || chromo[i+1] != '+')
-                push!(possible_ids, i)
-            end
-        end
+        possible_ids = findall(isletter, chromo)
 
         isempty(possible_ids) && return nothing
         idx = rand(possible_ids)
     end
 
-    return chromo[1:idx] * '+' * chromo[idx+1:end]
+    last_letter_idx = idx
+    for i in idx+1:length(chromo)
+        if isletter(chromo[i])
+            last_letter_idx += 1
+        else
+            break
+        end
+    end
+
+    random_range = rand(idx:last_letter_idx)
+    return if last_letter_idx == idx || random_range == idx
+        chromo[1:idx] * '+' * chromo[idx+1:end]
+    else
+        chromo[1:idx-1] *
+        '(' *
+        chromo[idx:random_range] *
+        ")+" *
+        chromo[random_range+1:end]
+    end
 end
 
 function remove_loop(chromo::String; idx = nothing)::Union{String,Nothing}
