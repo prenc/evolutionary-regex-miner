@@ -91,13 +91,19 @@ end
     @test nothing == pull_out("(a[bc]{2}|a+)", 1)
     @test nothing == pull_out("(a+[bc]{2}|a)", 1)
 
+    @test "ab" == pull_out("(a|ab)", 1)
+    @test "ab" == pull_out("(ab|b)", 1)
+
+    @test "a(b|bc)" == pull_out("(ab|abc)", 1)
+    @test "(ab|b)c" == pull_out("(abc|bc)", 1)
+
     @test "a[bc]{2}" == pull_out("(a[bc]{2}|a)", 1)
     @test "[ab]{2}c" == pull_out("([ab]{2}c|c)", 1)
 
     @test "a+[bc]{2}" == pull_out("(a+[bc]{2}|a+)", 1)
     @test "[ab]{2}c+" == pull_out("([ab]{2}c+|c+)", 1)
 
-    @test "(a|[bc]{2})d" == pull_out("(ad|[ab]{2}d)", 1)
+    @test "(a|[bc]{2})d" == pull_out("(ad|[bc]{2}d)", 1)
     @test "a([bc]{2}|d)" == pull_out("(a[bc]{2}|ad)", 1)
 
     @test "[ab]{2}cd" == pull_out("([ab]{2}|[ab]{2}cd)", 1)
