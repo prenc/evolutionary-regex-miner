@@ -16,6 +16,7 @@ using StatsBase: sample, Weights
     REMOVE_BRANCH_AND
     ADD_LOOP
     REMOVE_LOOP
+    PULL_OUT
 end
 
 const ALL_MUTATIONS = Dict(
@@ -27,6 +28,7 @@ const ALL_MUTATIONS = Dict(
     REMOVE_BRANCH_AND => REMOVE_BRANCH_AND_RATE,
     ADD_LOOP => ADD_LOOP_RATE,
     REMOVE_LOOP => REMOVE_LOOP_RATE,
+    PULL_OUT => PULL_OUT_RATE,
 )
 
 function add_event(chromo::String, events::String; idx = nothing)::Union{String,Nothing}
@@ -254,6 +256,36 @@ function remove_branch_and(chromo::String; idx = nothing)::Union{String,Nothing}
            chromo[r_bracket+4:end]
 end
 
+function pull_out(chromo::String, idx = nothing)::Union{String,Nothing}
+    if idx == nothing
+        possible_ids = findall(e -> e == '(', chromo)
+
+        isempty(possible_ids) && return nothing
+        idx = rand(possible_ids)
+    end
+
+    l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
+    r_shift = plus ? 2 : 1
+
+    return if isletter(chromo[pipe+1]) && chromo[l_bracket+1] == chromo[pipe+1]
+        if pipe - l_bracket == 2 || r_bracket - pipe == 2
+            chromo[1:l_bracket-1] * chromo[pipe+1] * chromo[l_bracket+2:pipe-1] * chromo[pipe+2:r_bracket-1] *
+            chromo[r_bracket+r_shift:end]
+        else
+            chromo[1:l_bracket-1] * chromo[pipe+1] * '(' * chromo[l_bracket+1:pipe] * chromo[pipe+2:end]
+        end
+    elseif isletter(chromo[pipe-1]) && chromo[pipe-1] == chromo[r_bracket-1]
+        if pipe - l_bracket == 2 || r_bracket - pipe == 2
+            chromo[1:l_bracket-1] * chromo[l_bracket+1:pipe-2] * chromo[pipe+1:r_bracket-2] *
+            chromo[pipe-1] * chromo[r_bracket+r_shift:end]
+        else
+            chromo[1:pipe-2] * chromo[pipe:r_bracket-2] * chromo[r_bracket:end]
+        end
+    else
+        nothing
+    end
+end
+
 function crossover(
     chromo1::String,
     chromo2::String;
@@ -429,6 +461,8 @@ function mutate(
                 add_loop(chromo)
             elseif mutation == REMOVE_LOOP
                 remove_loop(chromo)
+            elseif mutation == PULL_OUT
+                pull_out(chromo)
             else
                 error("Unsupported mutation encounterd: '$(mutation)'")
             end
