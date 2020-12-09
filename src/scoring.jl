@@ -7,9 +7,9 @@ include("parameters.jl")
 using Statistics
 using Base.Threads: @spawn, fetch
 
-function score(regex::String, logs::Vector{String})::Pair{String,Tuple{Float64,Float64}}
-
+function score(regex::String, logs::Vector{String})
     log_fitness = Vector()
+    fitness = 1
     for log in logs
         try
             matches = collect(eachmatch(Regex(regex), log))
@@ -18,12 +18,11 @@ function score(regex::String, logs::Vector{String})::Pair{String,Tuple{Float64,F
                 isempty(matches) ? 1 :
                 1 - findmax(map(m -> length(m.match), matches))[1] / length(log),
             )
+            fitness = mean(log_fitness)
         catch e
             @debug "Chromosome too complex: '$(regex)'"
         end
     end
-
-    fitness = mean(log_fitness)
 
     event_number = 0
     branch_number = sum(get_bracket_levels(regex))
@@ -46,7 +45,7 @@ function score(regex::String, logs::Vector{String})::Pair{String,Tuple{Float64,F
 
     @debug "Score '$(regex)': fitness: '$(fitness)'," *
            " precision: '$(precision)', simplicity: '$(simplicity)'"
-   return Pair(regex, (fitness, precision + simplicity))
+   return regex, (fitness, precision + simplicity)
 end
 
 function score_population(population::Vector{String}, logs::Vector{String})
