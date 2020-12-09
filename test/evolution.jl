@@ -48,6 +48,12 @@ using .evolution: remove_event, add_branch_or, crossover, find_brackets
         @test "(ab|d)" == remove_event("(a[bc]{2}|d)", idx = 5)
         @test "a[bc]{2}" == remove_event("(a[bc]{2}|d)", idx = 11)
     end
+
+    @testset "(ab)+c" begin
+        @test "b+c" == remove_event("(ab)+c", idx = 2)
+        @test "a+c" == remove_event("(ab)+c", idx = 3)
+        @test "(ab)+" == remove_event("(ab)+c", idx = 6)
+    end
 end
 
 @testset "Add branch mutation" begin
