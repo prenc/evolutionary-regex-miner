@@ -25,27 +25,41 @@ function score(regex::String, logs::Vector{String})
     end
 
     event_number = 0
-    branch_number = sum(get_bracket_levels(regex))
-    loop_number = 0
-    and_number = 0
+    event_inside_and = 0
 
+    branch_or_number = sum(get_bracket_levels(regex))
+    branch_and_number = 0
+    loop_number = 0
+
+    inside_and = false
     for c in regex
         if c == '+'
             loop_number += 1
         elseif isletter(c)
-            event_number += 1
+            if inside_and
+                event_inside_and += 1
+            else
+                event_number += 1
+            end
         elseif c == '['
-            and_number += 1
+            branch_and_number += 1
+            inside_and = true
+        elseif c == '}'
+            inside_and = false
         end
     end
 
-    precision = branch_number * BRANCH_PENALTY + loop_number * LOOP_PENALTY + and_number * AND_PENALTY
+    precision =
+        event_inside_and * EVENT_INSIDE_AND_PENALTY + 
+        branch_or_number * BRANCH_PENALTY +
+        branch_and_number * AND_PENALTY +
+        loop_number * LOOP_PENALTY
 
     simplicity = event_number * EVENT_PENALTY
 
     @debug "Score '$(regex)': fitness: '$(fitness)'," *
            " precision: '$(precision)', simplicity: '$(simplicity)'"
-   return regex, (fitness, precision + simplicity)
+    return regex, (fitness, precision + simplicity)
 end
 
 function score_population(population::Vector{String}, logs::Vector{String})
