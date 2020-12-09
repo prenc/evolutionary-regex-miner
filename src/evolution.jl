@@ -73,14 +73,28 @@ function remove_event(chromo::String; idx = nothing)::String
               (r_idx < length(chromo) && chromo[r_idx+1] == '|')
         l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
         r_shift = plus ? 2 : 1
-
-        chromo[1:l_bracket-1] * chromo[pipe+1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+        if pipe == nothing
+            if r_bracket - l_bracket == 3
+                chromo[1:l_bracket-1] * chromo[idx+1] * chromo[idx+3:end]
+            else
+                chromo[1:l_bracket] * chromo[idx+1:end]
+            end
+        else
+            chromo[1:l_bracket-1] * chromo[pipe+1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+        end
     elseif (idx > 1 && chromo[idx-1] == '|') ||
            (r_idx < length(chromo) && chromo[r_idx+1] == ')')
         l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
         r_shift = plus ? 2 : 1
-
-        chromo[1:l_bracket-1] * chromo[l_bracket+1:pipe-1] * chromo[r_bracket+r_shift:end]
+        if pipe == nothing
+            if r_bracket - l_bracket == 3
+                chromo[1:l_bracket-1] * chromo[idx-1] * chromo[idx+2:end]
+            else
+                chromo[1:l_bracket] * chromo[idx+1:end]
+            end
+        else
+            chromo[1:l_bracket-1] * chromo[l_bracket+1:pipe-1] * chromo[r_bracket+r_shift:end]
+        end
     elseif idx > 1 && chromo[idx-1] == '['
         r_bracket = findnext(e -> e == ']', chromo, idx + 1)
         new_chromo = chromo[1:idx-1] * chromo[idx+1:end]
@@ -140,12 +154,13 @@ function remove_branch_or(chromo::String; idx = nothing)::Union{String,Nothing}
     branch = if pipe != nothing
         left_branch = chromo[l_bracket+1:pipe-1]
         right_branch = chromo[pipe+1:r_bracket-1]
+        r_shift = plus ? 1 : 0
         rand([left_branch, right_branch])
     else
+        r_shift = 0
         chromo[l_bracket+1:r_bracket-1]
     end
 
-    r_shift = plus ? 1 : 0
     return chromo[1:l_bracket-1] * branch * chromo[r_bracket+r_shift:end]
 end
 
