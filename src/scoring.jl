@@ -63,7 +63,12 @@ function score(regex::String, logs::Vector{String})
 end
 
 function score_population(population::Vector{String}, logs::Vector{String})
-    return map(fetch, map(chromo -> @spawn(score(chromo, logs)), population))
+    scored_population = map(fetch, map(chromo -> @spawn(score(chromo, logs)), population))
+
+    precisions = [score for (_, (_, score)) in scored_population]
+    max_precision = max(precisions...)
+
+    return [(chromo, fitness + precision / max_precision / 2) for (chromo, (fitness, precision)) in scored_population]
 end
 
 function get_bracket_levels(chromo::String)::Vector{Int}
