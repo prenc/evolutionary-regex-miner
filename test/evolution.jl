@@ -1,7 +1,37 @@
 include("../src/evolution.jl")
 
 using Test
-using .evolution: remove_event, add_branch_or, pull_out, crossover, find_brackets
+using .evolution: add_event,
+        remove_event,
+        add_branch_or,
+        remove_branch_or,
+        add_branch_and,
+        remove_branch_and,
+        pull_out,
+        crossover,
+        find_brackets
+
+@testset "Add event mutation" begin
+    @testset "Basics" begin
+        @test "ab" == add_event("b", "a", idx = 0)
+        @test "ba" == add_event("b", "a", idx = 1)
+    end
+
+    @testset "Branch and" begin
+        @test "[abc]{2}" == add_event("[ab]{2}", "c", idx = 1)
+        @test "[abc]{2}" == add_event("[ab]{2}", "c", idx = 2)
+        @test "[abc]{2}" == add_event("[ab]{2}", "c", idx = 3)
+    end
+
+    @testset "Branch or" begin
+        @test "c(a|b)" == add_event("(a|b)", "c", idx = 0)
+        @test "(ca|b)" == add_event("(a|b)", "c", idx = 1)
+        @test "(ac|b)" == add_event("(a|b)", "c", idx = 2)
+        @test "(a|cb)" == add_event("(a|b)", "c", idx = 3)
+        @test "(a|bc)" == add_event("(a|b)", "c", idx = 4)
+        @test "(a|b)c" == add_event("(a|b)", "c", idx = 5)
+    end
+end
 
 @testset "Remove event mutation" begin
     @testset "abcde" begin
@@ -56,7 +86,7 @@ using .evolution: remove_event, add_branch_or, pull_out, crossover, find_bracket
     end
 end
 
-@testset "Add branch mutation" begin
+@testset "Add branch or mutation" begin
     @testset "a" begin
         @test "(a|b)" == add_branch_or("a", "b", idx = 1)
     end
@@ -84,7 +114,19 @@ end
     end
 end
 
-@testset "Pull out" begin
+@testset "Remove branch or mutation" begin
+    @test "abcd" == remove_branch_or("a(bc)d", idx = 2)
+    @test "abcd" == remove_branch_or("a(bc)+d", idx = 2)
+end
+
+@testset "Add branch and mutation" begin
+end
+
+@testset "Remove branch and mutation" begin
+
+end
+
+@testset "Pull out mutation" begin
     @test nothing == pull_out("(a[bc]{2}|d)", 1)
     @test nothing == pull_out("(a[bc]{2}|(a|d))", 1)
 
