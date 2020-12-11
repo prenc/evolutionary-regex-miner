@@ -130,6 +130,7 @@ function add_branch_or(chromo::String, events::String; idx = nothing)::Union{Str
             if !inside_and && isletter(e) && e != new_event
                 push!(possible_ids, i)
             elseif e == '['
+                push!(possible_ids, i)
                 inside_and = true
             elseif e == '}'
                 inside_and = false
@@ -139,11 +140,16 @@ function add_branch_or(chromo::String, events::String; idx = nothing)::Union{Str
         isempty(possible_ids) && return nothing
         idx = rand(possible_ids)
     end
-
-    return chromo[1:idx-1] * '(' * chromo[idx] * '|' * new_event * ')' * chromo[idx+1:end]
+    sub_chromo =  if chromo[idx] == '['
+        and_end = findnext(e -> e == '}', chromo, idx+6)
+        chromo[idx:and_end] * '|' * new_event * ')' * chromo[and_end+1:end]
+    else
+        chromo[idx] * '|' * new_event * ')' * chromo[idx+1:end]
+    end
+        return chromo[1:idx-1] * '(' * sub_chromo
 end
 
-function remove_branch_or(chromo::String; idx = nothing)::Union{String,Nothing}
+function remove_branch_or(chromo::String; idx = nothing, take_l_branch = nothing)::Union{String,Nothing}
     if idx == nothing
         possible_ids = findall(l -> l == '(', chromo)
 
@@ -157,7 +163,13 @@ function remove_branch_or(chromo::String; idx = nothing)::Union{String,Nothing}
     branch = if pipe != nothing
         left_branch = chromo[l_bracket+1:pipe-1]
         right_branch = chromo[pipe+1:r_bracket-1]
-        rand([left_branch, right_branch])
+        if left_branch == nothing
+            rand([left_branch, right_branch])
+        elseif take_l_branch
+            left_branch
+        else
+            right_branch
+        end
     else
         chromo[l_bracket+1:r_bracket-1]
     end
@@ -165,7 +177,7 @@ function remove_branch_or(chromo::String; idx = nothing)::Union{String,Nothing}
     return chromo[1:l_bracket-1] * branch * chromo[r_bracket+r_shift:end]
 end
 
-function add_loop(chromo::String; idx = nothing)::Union{String,Nothing}
+function add_loop(chromo::String; idx = nothing, idx2 = nothing)::Union{String,Nothing}
     if idx == nothing
         possible_ids = findall(isletter, chromo)
 
@@ -182,15 +194,11 @@ function add_loop(chromo::String; idx = nothing)::Union{String,Nothing}
         end
     end
 
-    random_range = rand(idx:last_letter_idx)
-    return if last_letter_idx == idx || random_range == idx
+    random_idx = idx2 == nothing ? rand(idx:last_letter_idx) : idx2
+    return if last_letter_idx == idx || random_idx == idx
         chromo[1:idx] * '+' * chromo[idx+1:end]
     else
-        chromo[1:idx-1] *
-        '(' *
-        chromo[idx:random_range] *
-        ")+" *
-        chromo[random_range+1:end]
+        chromo[1:idx-1] * '(' * chromo[idx:random_idx] * ")+" * chromo[random_idx+1:end]
     end
 end
 
@@ -203,7 +211,13 @@ function remove_loop(chromo::String; idx = nothing)::Union{String,Nothing}
         idx = rand(plus_ids)
     end
 
-    return chromo[1:idx-1] * chromo[idx+1:end]
+    if chromo[idx-1] == ')'
+        l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
+        if pipe == nothing
+            return chromo[1:l_bracket-1] * chromo[l_bracket+1:r_bracket-1] * chromo[idx+1:end]
+        end
+    end
+        return chromo[1:idx-1] * chromo[idx+1:end]
 end
 
 function add_branch_and(
@@ -230,11 +244,15 @@ function add_branch_and(
 
     new_sub_chromo, r_idx =
         if idx < length(chromo) && isletter(chromo[idx+1]) && chromo[idx] != chromo[idx+1]
-            chromo[idx:idx+1], 2
+            join(sort(collect(chromo[idx:idx+1]))), 2
         else
             new_events = Set(collect(events))
             pop!(new_events, chromo[idx])
-            chromo[idx] * rand(new_events), 1
+            join(sort([chromo[idx],  rand(new_events)])), 1
+        end
+
+        if idx+r_idx <= length(chromo) && chromo[idx+r_idx] == '+'
+            r_idx += 1
         end
 
     return chromo[1:idx-1] * '[' * new_sub_chromo * "]{2}" * chromo[idx+r_idx:end]
@@ -264,25 +282,52 @@ function pull_out(chromo::String, idx = nothing)::Union{String,Nothing}
     end
 
     l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
+    pipe == nothing && return
     r_shift = plus ? 2 : 1
 
-    return if isletter(chromo[pipe+1]) && chromo[l_bracket+1] == chromo[pipe+1]
-        if pipe - l_bracket == 2 || r_bracket - pipe == 2 # remove or branch
-            chromo[1:l_bracket-1] * chromo[pipe+1] * chromo[l_bracket+2:pipe-1] * chromo[pipe+2:r_bracket-1] *
-            chromo[r_bracket+r_shift:end]
-        else
-            chromo[1:l_bracket-1] * chromo[pipe+1] * '(' * chromo[l_bracket+2:pipe] * chromo[pipe+2:end]
+    if chromo[l_bracket+1] == chromo[pipe+1]
+        sub_chromo = if isletter(chromo[l_bracket+1])
+            plus1 = chromo[l_bracket+2] == '+'
+            (chromo[pipe+2] == '+') != plus1 && return nothing
+            r_shift1 = plus1 ? 2 : 1
+
+            if l_bracket + 1 == pipe - r_shift1 || pipe + 1 == r_bracket - r_shift1 # remove or branch
+                chromo[l_bracket+1:l_bracket+r_shift1] * chromo[l_bracket+r_shift1+1:pipe-1] *
+                chromo[pipe+r_shift1+1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+            else
+                chromo[l_bracket+1:l_bracket+r_shift1] * '(' * chromo[l_bracket+r_shift1+1:pipe] *
+                chromo[pipe+r_shift1+1:end]
+            end
+        elseif chromo[l_bracket+1] == '['
+            and_branch_end1 = findnext(e -> e == '}', chromo, l_bracket+6) # l_bracket+6 first index where } can be found
+            and_branch_end2 = findnext(e -> e == '}', chromo, pipe+7) # same as above
+            chromo[l_bracket+1:and_branch_end1] != chromo[pipe+1:and_branch_end2] && return nothing
+
+            if chromo[pipe-1] == '}' || chromo[r_bracket-1] == '}' # remove or branch
+                chromo[l_bracket+1:and_branch_end1] * chromo[and_branch_end1+1:pipe-1] *
+                chromo[and_branch_end2+1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+            else
+                chromo[l_bracket+1:and_branch_end1] * '(' * chromo[and_branch_end1+1:pipe] *
+                chromo[and_branch_end2+1:end]
+            end
+        elseif chromo[l_bracket+1] == '('
+            l_bracket1, _, r_bracket1, plus1 = find_brackets(chromo, l_bracket+1)
+            l_bracket2, _, r_bracket2, plus2 = find_brackets(chromo, pipe+1)
+            (plus1 != plus2 || chromo[l_bracket1:r_bracket1] != chromo[l_bracket2:r_bracket2]) && return nothing
+            r_shift1 = plus1 ? 2 : 1
+
+            if chromo[pipe-r_shift1] == ')' || chromo[r_bracket-r_shift1] == ')' # remove or branch
+                chromo[l_bracket1:r_bracket1+r_shift1-1] * chromo[r_bracket1+r_shift1:pipe-1] *
+                chromo[r_bracket2+r_shift1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+            else
+                chromo[l_bracket1:r_bracket1] * '(' * chromo[r_bracket1+r_shift1:pipe] *
+                chromo[r_bracket2+r_shift1:end]
+            end
         end
-    elseif isletter(chromo[pipe-1]) && chromo[pipe-1] == chromo[r_bracket-1]
-        if pipe - l_bracket == 2 || r_bracket - pipe == 2 # remove or branch
-            chromo[1:l_bracket-1] * chromo[l_bracket+1:pipe-2] * chromo[pipe+1:r_bracket-2] *
-            chromo[pipe-1] * chromo[r_bracket+r_shift:end]
-        else
-            chromo[1:pipe-2] * chromo[pipe:r_bracket-2] * ')' * chromo[pipe-1] * chromo[r_bracket+1:end]
-        end
-    else
-        nothing
+        return chromo[1:l_bracket-1] * sub_chromo
     end
+
+    return nothing
 end
 
 function crossover(
