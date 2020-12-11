@@ -153,13 +153,12 @@ function remove_branch_or(chromo::String; idx = nothing)::Union{String,Nothing}
 
     l_bracket, pipe, r_bracket, plus = find_brackets(chromo, idx)
 
+    r_shift = plus ? 2 : 1
     branch = if pipe != nothing
         left_branch = chromo[l_bracket+1:pipe-1]
         right_branch = chromo[pipe+1:r_bracket-1]
-        r_shift = plus ? 1 : 0
         rand([left_branch, right_branch])
     else
-        r_shift = 0
         chromo[l_bracket+1:r_bracket-1]
     end
 
