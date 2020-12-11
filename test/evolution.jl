@@ -7,34 +7,40 @@ using .evolution: add_event,
         remove_branch_or,
         add_branch_and,
         remove_branch_and,
+        add_loop,
+        remove_loop,
         pull_out,
         crossover,
         find_brackets
 
 @testset "Add event mutation" begin
-    @testset "Basics" begin
+    @testset "Elementary addition" begin
         @test "ab" == add_event("b", "a", idx = 0)
         @test "ba" == add_event("b", "a", idx = 1)
     end
 
-    @testset "Branch and" begin
+    @testset "Addition inside and branch" begin
         @test "[abc]{2}" == add_event("[ab]{2}", "c", idx = 1)
         @test "[abc]{2}" == add_event("[ab]{2}", "c", idx = 2)
         @test "[abc]{2}" == add_event("[ab]{2}", "c", idx = 3)
     end
 
-    @testset "Branch or" begin
-        @test "c(a|b)" == add_event("(a|b)", "c", idx = 0)
-        @test "(ca|b)" == add_event("(a|b)", "c", idx = 1)
-        @test "(ac|b)" == add_event("(a|b)", "c", idx = 2)
-        @test "(a|cb)" == add_event("(a|b)", "c", idx = 3)
-        @test "(a|bc)" == add_event("(a|b)", "c", idx = 4)
-        @test "(a|b)c" == add_event("(a|b)", "c", idx = 5)
+    @testset "Addition inside or branch" begin
+        @test "d(a|(b|c))" == add_event("(a|(b|c))", "d", idx = 0)
+        @test "(da|(b|c))" == add_event("(a|(b|c))", "d", idx = 1)
+        @test "(ad|(b|c))" == add_event("(a|(b|c))", "d", idx = 2)
+        @test "(a|d(b|c))" == add_event("(a|(b|c))", "d", idx = 3)
+        @test "(a|(db|c))" == add_event("(a|(b|c))", "d", idx = 4)
+        @test "(a|(bd|c))" == add_event("(a|(b|c))", "d", idx = 5)
+        @test "(a|(b|dc))" == add_event("(a|(b|c))", "d", idx = 6)
+        @test "(a|(b|cd))" == add_event("(a|(b|c))", "d", idx = 7)
+        @test "(a|(b|c)d)" == add_event("(a|(b|c))", "d", idx = 8)
+        @test "(a|(b|c))d" == add_event("(a|(b|c))", "d", idx = 9)
     end
 end
 
 @testset "Remove event mutation" begin
-    @testset "abcde" begin
+    @testset "Elementary deletion" begin
         @test "bcde" == remove_event("abcde", idx = 1)
         @test "acde" == remove_event("abcde", idx = 2)
         @test "abde" == remove_event("abcde", idx = 3)
@@ -42,29 +48,22 @@ end
         @test "abcd" == remove_event("abcde", idx = 5)
     end
 
-    @testset "(a|b)" begin
+    @testset "Deletion in or branch" begin
         @test "b" == remove_event("(a|b)", idx = 2)
         @test "a" == remove_event("(a|b)", idx = 4)
-    end
-
-    @testset "(a+|b)+" begin
         @test "b" == remove_event("(a+|b)+", idx = 2)
         @test "a+" == remove_event("(a+|b)+", idx = 5)
-    end
 
-    @testset "(abc|b)+" begin
         @test "b" == remove_event("(abc|b)+", idx = 2)
         @test "(ac|b)+" == remove_event("(abc|b)+", idx = 3)
         @test "b" == remove_event("(abc|b)+", idx = 4)
         @test "abc" == remove_event("(abc|b)+", idx = 6)
     end
 
-    @testset "[ab]{2}" begin
+    @testset "Deletion inside and branch" begin
         @test "b" == remove_event("[ab]{2}", idx = 2)
         @test "a" == remove_event("[ab]{2}", idx = 3)
-    end
 
-    @testset "a[bcd]{2}e" begin
         @test "[bcd]{2}e" == remove_event("a[bcd]{2}e", idx = 1)
         @test "a[cd]{2}e" == remove_event("a[bcd]{2}e", idx = 3)
         @test "a[bd]{2}e" == remove_event("a[bcd]{2}e", idx = 4)
@@ -72,58 +71,96 @@ end
         @test "a[bcd]{2}" == remove_event("a[bcd]{2}e", idx = 10)
     end
 
-    @testset "(a[bc]{2}|d)" begin
+    @testset "Deletion of and branch nested in or branch" begin
         @test "d" == remove_event("(a[bc]{2}|d)", idx = 2)
         @test "(ac|d)" == remove_event("(a[bc]{2}|d)", idx = 4)
         @test "(ab|d)" == remove_event("(a[bc]{2}|d)", idx = 5)
         @test "a[bc]{2}" == remove_event("(a[bc]{2}|d)", idx = 11)
     end
 
-    @testset "(ab)+c" begin
+    @testset "Deletion of loops" begin
         @test "b+c" == remove_event("(ab)+c", idx = 2)
         @test "a+c" == remove_event("(ab)+c", idx = 3)
         @test "(ab)+" == remove_event("(ab)+c", idx = 6)
     end
 end
 
-@testset "Add branch or mutation" begin
-    @testset "a" begin
+@testset "Add or branch mutation" begin
+    @testset "Elementary or branch addition" begin
         @test "(a|b)" == add_branch_or("a", "b", idx = 1)
-    end
-
-    @testset "a+" begin
         @test "(a|b)+" == add_branch_or("a+", "b", idx = 1)
     end
 
-    @testset "a(b|c)d" begin
+    @testset "Addition if nested or branches" begin
         @test "(a|e)(b|c)d" == add_branch_or("a(b|c)d", "e", idx = 1)
         @test "a((b|e)|c)d" == add_branch_or("a(b|c)d", "e", idx = 3)
         @test "a(b|(c|e))d" == add_branch_or("a(b|c)d", "e", idx = 5)
         @test "a(b|c)(d|e)" == add_branch_or("a(b|c)d", "e", idx = 7)
-    end
 
-    @testset "(ab|c)" begin
         @test "((a|e)b|c)" == add_branch_or("(ab|c)", "e", idx = 2)
         @test "(a(b|e)|c)" == add_branch_or("(ab|c)", "e", idx = 3)
         @test "(ab|(c|e))" == add_branch_or("(ab|c)", "e", idx = 5)
     end
 
-    @testset "a[bc]{2}d" begin
+    @testset "Addition when and branch present" begin
         @test "(a|e)[bc]{2}d" == add_branch_or("a[bc]{2}d", "e", idx = 1)
+        @test "a([bc]{2}|e)d" == add_branch_or("a[bc]{2}d", "e", idx = 2)
         @test "a[bc]{2}(d|e)" == add_branch_or("a[bc]{2}d", "e", idx = 9)
+
+        @test "a([bcd]{2}|f)e" == add_branch_or("a[bcd]{2}e", "f", idx = 2)
     end
 end
 
-@testset "Remove branch or mutation" begin
+@testset "Remove or branch mutation" begin
     @test "abcd" == remove_branch_or("a(bc)d", idx = 2)
     @test "abcd" == remove_branch_or("a(bc)+d", idx = 2)
+    @test "abd" == remove_branch_or("a(b|c)d", idx = 2, take_l_branch = true)
+    @test "acd" == remove_branch_or("a(b|c)d", idx = 2, take_l_branch = false)
+
+    @test "a(b|c)e" == remove_branch_or("a((b|c)|d)e", idx = 2, take_l_branch = true)
+    @test "ade" == remove_branch_or("a((b|c)|d)e", idx = 2, take_l_branch = false)
+
+    @test "a(b|c)g" == remove_branch_or("a((b|c)|[def]{2})g", idx = 2, take_l_branch = true)
+    @test "a[def]{2}g" == remove_branch_or("a((b|c)|[def]{2})g", idx = 2, take_l_branch = false)
+end
+
+@testset "Add loop mutation" begin
+    @test "a+bcd" == add_loop("abcd", idx = 1, idx2 = 1)
+    @test "ab+cd" == add_loop("abcd", idx = 2, idx2 = 2)
+    @test "abc+d" == add_loop("abcd", idx = 3, idx2 = 3)
+    @test "abcd+" == add_loop("abcd", idx = 4, idx2 = 4)
+
+    @test "(ab)+cd" == add_loop("abcd", idx = 1, idx2 = 2)
+    @test "(abc)+d" == add_loop("abcd", idx = 1, idx2 = 3)
+    @test "(abcd)+" == add_loop("abcd", idx = 1, idx2 = 4)
+
+    @test "a(bc)+d" == add_loop("abcd", idx = 2, idx2 = 3)
+    @test "a(bcd)+" == add_loop("abcd", idx = 2, idx2 = 4)
+    @test "ab(cd)+" == add_loop("abcd", idx = 3, idx2 = 4)
+end
+
+@testset "Remove loop mutation" begin
+    @test "abcd" == remove_loop("a+bcd")
+    @test "abcd" == remove_loop("ab+cd")
+    @test "abcd" == remove_loop("abc+d")
+    @test "abcd" == remove_loop("abcd+")
+
+    @test "(a|b)cd" == remove_loop("(a|b)+cd")
+    @test "(ab|c)d" == remove_loop("(ab|c)+d")
+    @test "(ab|cd)" == remove_loop("(ab|cd)+")
+
+    @test "abcd" == remove_loop("(ab)+cd")
+    @test "abcd" == remove_loop("(abc)+d")
+    @test "abcd" == remove_loop("(abcd)+")
+    @test "abcd" == remove_loop("a(bc)+d")
+    @test "abcd" == remove_loop("a(bcd)+")
+    @test "abcd" == remove_loop("ab(cd)+")
 end
 
 @testset "Add branch and mutation" begin
-end
-
-@testset "Remove branch and mutation" begin
-
+    @test "a[bc]{2}" == add_branch_and("abc", "c", idx = 2)
+    @test "ab[cd]{2}" == add_branch_and("abd", "cd", idx = 3)
+    @test "a[bc]{2}d" == add_branch_and("ab+d", "bc", idx = 2)
 end
 
 @testset "Pull out mutation" begin
@@ -151,8 +188,9 @@ end
     @test "[ab]{2}cd" == pull_out("([ab]{2}|[ab]{2}cd)", 1)
     @test "ab[cd]{2}" == pull_out("(ab[cd]{2}|[ab]{2})", 1)
 
-    @test "[ab]{2}+cd" == pull_out("([ab]{2}+|[ab]{2}+cd)", 1)
-    @test "ab[cd]{2}+" == pull_out("(ab[cd]{2}|[ab]{2}+)", 1)
+    # Should we support this?
+    # @test "[ab]{2}+cd" == pull_out("([ab]{2}+|[ab]{2}+cd)", 1)
+    # @test "ab[cd]{2}+" == pull_out("(ab[cd]{2}|[ab]{2}+)", 1)
 
     @test "(a|b)cd" == pull_out("((a|b)|(a|b)cd)", 1)
     @test "ab(c|d)" == pull_out("(ab(c|d)|(c|d))", 1)
