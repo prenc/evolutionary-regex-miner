@@ -163,7 +163,7 @@ function remove_branch_or(chromo::String; idx = nothing, take_l_branch = nothing
     branch = if pipe != nothing
         left_branch = chromo[l_bracket+1:pipe-1]
         right_branch = chromo[pipe+1:r_bracket-1]
-        if left_branch == nothing
+        if take_l_branch == nothing
             rand([left_branch, right_branch])
         elseif take_l_branch
             left_branch
