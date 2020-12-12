@@ -288,46 +288,118 @@ function pull_out(chromo::String, idx = nothing)::Union{String,Nothing}
     if chromo[l_bracket+1] == chromo[pipe+1]
         sub_chromo = if isletter(chromo[l_bracket+1])
             plus1 = chromo[l_bracket+2] == '+'
-            (chromo[pipe+2] == '+') != plus1 && return nothing
-            r_shift1 = plus1 ? 2 : 1
 
-            if l_bracket + 1 == pipe - r_shift1 || pipe + 1 == r_bracket - r_shift1 # remove or branch
-                chromo[l_bracket+1:l_bracket+r_shift1] * chromo[l_bracket+r_shift1+1:pipe-1] *
-                chromo[pipe+r_shift1+1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+            if (chromo[pipe+2] == '+') == plus1
+                r_shift1 = plus1 ? 2 : 1
+                if l_bracket + 1 == pipe - r_shift1 || pipe + 1 == r_bracket - r_shift1 # remove or branch
+                    chromo[l_bracket+1:l_bracket+r_shift1] * chromo[l_bracket+r_shift1+1:pipe-1] *
+                    chromo[pipe+r_shift1+1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+                else
+                    chromo[l_bracket+1:l_bracket+r_shift1] * '(' * chromo[l_bracket+r_shift1+1:pipe] *
+                    chromo[pipe+r_shift1+1:end]
+                end
             else
-                chromo[l_bracket+1:l_bracket+r_shift1] * '(' * chromo[l_bracket+r_shift1+1:pipe] *
-                chromo[pipe+r_shift1+1:end]
+                nothing
             end
         elseif chromo[l_bracket+1] == '['
             and_branch_end1 = findnext(e -> e == '}', chromo, l_bracket+6) # l_bracket+6 first index where } can be found
             and_branch_end2 = findnext(e -> e == '}', chromo, pipe+7) # same as above
-            chromo[l_bracket+1:and_branch_end1] != chromo[pipe+1:and_branch_end2] && return nothing
 
-            if chromo[pipe-1] == '}' || chromo[r_bracket-1] == '}' # remove or branch
-                chromo[l_bracket+1:and_branch_end1] * chromo[and_branch_end1+1:pipe-1] *
-                chromo[and_branch_end2+1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+            if chromo[l_bracket+1:and_branch_end1] == chromo[pipe+1:and_branch_end2]
+                if chromo[pipe-1] == '}' || chromo[r_bracket-1] == '}' # remove or branch
+                    chromo[l_bracket+1:and_branch_end1] * chromo[and_branch_end1+1:pipe-1] *
+                    chromo[and_branch_end2+1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+                else
+                    chromo[l_bracket+1:and_branch_end1] * '(' * chromo[and_branch_end1+1:pipe] *
+                    chromo[and_branch_end2+1:end]
+                end
             else
-                chromo[l_bracket+1:and_branch_end1] * '(' * chromo[and_branch_end1+1:pipe] *
-                chromo[and_branch_end2+1:end]
+                nothing
             end
         elseif chromo[l_bracket+1] == '('
             l_bracket1, _, r_bracket1, plus1 = find_brackets(chromo, l_bracket+1)
             l_bracket2, _, r_bracket2, plus2 = find_brackets(chromo, pipe+1)
-            (plus1 != plus2 || chromo[l_bracket1:r_bracket1] != chromo[l_bracket2:r_bracket2]) && return nothing
-            r_shift1 = plus1 ? 2 : 1
 
-            if chromo[pipe-r_shift1] == ')' || chromo[r_bracket-r_shift1] == ')' # remove or branch
-                chromo[l_bracket1:r_bracket1+r_shift1-1] * chromo[r_bracket1+r_shift1:pipe-1] *
-                chromo[r_bracket2+r_shift1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+            if plus1 == plus2 && chromo[l_bracket1:r_bracket1] == chromo[l_bracket2:r_bracket2]
+                r_shift1 = plus1 ? 2 : 1
+                if chromo[pipe-r_shift1] == ')' || chromo[r_bracket-r_shift1] == ')' # remove or branch
+                    chromo[l_bracket1:r_bracket1+r_shift1-1] * chromo[r_bracket1+r_shift1:pipe-1] *
+                    chromo[r_bracket2+r_shift1:r_bracket-1] * chromo[r_bracket+r_shift:end]
+                else
+                    chromo[l_bracket1:r_bracket1] * '(' * chromo[r_bracket1+r_shift1:pipe] *
+                    chromo[r_bracket2+r_shift1:end]
+                end
             else
-                chromo[l_bracket1:r_bracket1] * '(' * chromo[r_bracket1+r_shift1:pipe] *
-                chromo[r_bracket2+r_shift1:end]
+                nothing
             end
+        else
+            nothing
         end
-        return chromo[1:l_bracket-1] * sub_chromo
+        if sub_chromo != nothing
+            return chromo[1:l_bracket-1] * sub_chromo
+        end
     end
 
-    return nothing
+    if chromo[pipe-1] == chromo[r_bracket-1]
+        if chromo[pipe-1] == '+'
+            c, plus_sign = chromo[1:pipe-2] * chromo[pipe:r_bracket-2] * chromo[r_bracket:end], '+'
+            pipe -= 1
+            r_bracket -= 2
+        else
+            c, plus_sign = chromo, ""
+        end
+        outer_closing = plus ? ")+" : ")"
+
+        if c[pipe-1] == c[r_bracket-1]
+            sub_chromo = if isletter(c[r_bracket-1])
+                if r_bracket - pipe == 2 || pipe -  l_bracket == 2 # remove or branch
+                    c[1:l_bracket-1] * c[l_bracket+1:pipe-2] *
+                    c[pipe+1:r_bracket-1] * plus_sign
+                else
+                    c[1:pipe-2] * c[pipe:r_bracket-2] * outer_closing *
+                    c[r_bracket-1] * plus_sign
+                end
+            elseif c[r_bracket-1] == '}'
+                and_branch_start1 = findprev(e -> e == '[', c, pipe-7) # pipe-6 first index where [ can be found
+                and_branch_start2 = findprev(e -> e == '[', c, r_bracket-6) # same as above
+
+                if c[and_branch_start1:pipe-1] == c[and_branch_start2:r_bracket-1]
+                    if c[l_bracket+1] == '[' || c[pipe+1] == '[' # remove or branch
+                        c[1:l_bracket-1] * c[l_bracket+1:and_branch_start1-1] *
+                        c[pipe+1:and_branch_start2-1] * c[and_branch_start2:r_bracket-1]
+                    else
+                        c[1:and_branch_start1-1] * c[pipe:and_branch_start2-1] * outer_closing *
+                        c[and_branch_start2:r_bracket-1]
+                    end
+                else
+                    nothing
+                end
+            elseif c[r_bracket-1] == ')'
+                l_bracket1, _, r_bracket1, plus1 = find_brackets(c, pipe-1)
+                l_bracket2, _, r_bracket2, plus2 = find_brackets(c, r_bracket-1)
+
+                if c[l_bracket1:r_bracket1] == c[l_bracket2:r_bracket2]
+                    if c[l_bracket+1] == '(' || c[pipe+1] == '(' # remove or branch
+                        c[1:l_bracket-1] * c[l_bracket+1:l_bracket1-1] *
+                        c[pipe+1:r_bracket2] * plus_sign
+                    else
+                        c[1:l_bracket1-1] * c[pipe:l_bracket2-1] * outer_closing *
+                        c[l_bracket2:r_bracket2] * plus_sign
+                    end
+                else
+                    nothing
+                end
+            else
+                nothing
+            end
+            if sub_chromo != nothing
+                return sub_chromo * c[r_bracket+r_shift:end]
+            end
+        else
+            nothing
+        end
+    end
+    nothing
 end
 
 function crossover(

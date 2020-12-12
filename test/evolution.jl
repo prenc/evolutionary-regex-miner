@@ -170,6 +170,9 @@ end
     @test nothing == pull_out("(a[bc]{2}|a+)", 1)
     @test nothing == pull_out("(a+[bc]{2}|a)", 1)
 
+    @test nothing == pull_out("(a+[bc]{2}a)", 1)
+    @test nothing == pull_out("(a[bc]{2}(a|d))", 1)
+
     @test "ab" == pull_out("(a|ab)", 1)
     @test "ab" == pull_out("(ab|b)", 1)
 
@@ -186,7 +189,7 @@ end
     @test "a([bc]{2}|d)" == pull_out("(a[bc]{2}|ad)", 1)
 
     @test "[ab]{2}cd" == pull_out("([ab]{2}|[ab]{2}cd)", 1)
-    @test "ab[cd]{2}" == pull_out("(ab[cd]{2}|[ab]{2})", 1)
+    @test "ab[cd]{2}" == pull_out("(ab[cd]{2}|[cd]{2})", 1)
 
     # Should we support this?
     # @test "[ab]{2}+cd" == pull_out("([ab]{2}+|[ab]{2}+cd)", 1)
@@ -202,6 +205,7 @@ end
     @test nothing == pull_out("(ab(c|d)|(c|d)+)", 1)
 
     @test "(ab|[cd]{2})([ef]{2}|gh)" == pull_out("((ab|[cd]{2})[ef]{2}|(ab|[cd]{2})gh)", 1)
+    @test "((ab+|[cd]{2})|(ab|[cd]{2})gh)[ef]{2}" == pull_out("((ab+|[cd]{2})[ef]{2}|(ab|[cd]{2})gh[ef]{2})", 1)
 end
 
 @testset "Crossover" begin
