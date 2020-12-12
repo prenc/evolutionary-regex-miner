@@ -179,7 +179,17 @@ end
 
 function add_loop(chromo::String; idx = nothing, idx2 = nothing)::Union{String,Nothing}
     if idx == nothing
-        possible_ids = findall(isletter, chromo)
+        possible_ids = Vector{Int}()
+        nest_counter = 0
+        for (i, e) in enumerate(chromo)
+            if nest_counter == 0 && isletter(e)
+                push!(possible_ids, i)
+            elseif occursin(e, "[(")
+                nest_counter += 1
+            elseif occursin(e, ")}")
+                nest_counter -= 1
+            end
+        end
 
         isempty(possible_ids) && return nothing
         idx = rand(possible_ids)
