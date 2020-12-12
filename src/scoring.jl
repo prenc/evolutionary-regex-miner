@@ -1,6 +1,6 @@
 module scoring
 
-export score, score_population, init_oppossed_examples
+export score, score_population, init_counterexamples
 
 include("parameters.jl")
 
@@ -9,7 +9,7 @@ using Base.Threads: @spawn, fetch
 using StatsBase: sample
 using Random: rand
 
-function score(regex::String, logs::Vector{String}, opposed_examples)
+function score(regex::String, logs::Vector{String}, counterexamples)
     log_fitness = Vector()
     fitness = 1
     for log in logs
@@ -26,7 +26,7 @@ function score(regex::String, logs::Vector{String}, opposed_examples)
         end
     end
 
-    precision = sum(map(log -> occursin(regex, log), opposed_examples)) / length(opposed_examples)
+    precision = sum(map(log -> occursin(regex, log), counterexamples)) / length(counterexamples)
 
     event_number = 0
     event_inside_and = 0
@@ -65,8 +65,8 @@ function score(regex::String, logs::Vector{String}, opposed_examples)
     return regex, (fitness + precision, simplicity)
 end
 
-function score_population(population::Vector{String}, logs::Vector{String}, opposed_examples)
-    scored_population = map(fetch, map(chromo -> @spawn(score(chromo, logs, opposed_examples)), population))
+function score_population(population::Vector{String}, logs::Vector{String}, counterexamples)
+    scored_population = map(fetch, map(chromo -> @spawn(score(chromo, logs, counterexamples)), population))
 
     # precisions = [score for (_, (_, score)) in scored_population]
     # max_precision = max(precisions...)
@@ -76,21 +76,27 @@ function score_population(population::Vector{String}, logs::Vector{String}, oppo
     return scored_population
 end
 
-function init_oppossed_examples(events::String, logs::Vector{String})::Vector{String}
-    println("Initializing $(OPPOSED_EXAMPLE_NUMBER) opposed examples")
-    log_max_size = max(map(length, logs)...)
+function init_counterexamples(events::String, logs::Vector{String})::Vector{String}
+    println("Initializing $(COUNTEREXAMPLE_NUMBER) counterexamples...")
+    log_lengths = map(length, logs)
     logs = Set(logs)
-    opposed_examples = Vector{String}()
+    counter_examples = Set{String}()
 
-    while length(opposed_examples) < OPPOSED_EXAMPLE_NUMBER
-        random_size = rand(1:log_max_size)
-        random_example = join(sample(collect(events), random_size))
-        if !(random_example in logs)
-            push!(opposed_examples, random_example)
+    while length(counter_examples) < COUNTEREXAMPLE_NUMBER
+        example1 = rand(logs)
+        example2 = rand(logs)
+
+        ex1_idx = rand(1:length(example1))
+        ex2_idx = rand(1:length(example2))
+
+        random_example = example1[1:ex1_idx] * example2[ex2_idx:end]
+
+        if !(random_example in logs) && !(random_example in counter_examples)
+            push!(counter_examples, random_example)
         end
     end
 
-    return opposed_examples
+    return collect(counter_examples)
 end
 
 function get_bracket_levels(chromo::String)::Vector{Int}

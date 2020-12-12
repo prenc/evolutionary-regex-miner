@@ -14,11 +14,11 @@ using .evolution
 logs = readlines(LOG_FILE)
 letters = join(unique(join(logs)))
 
-opposed_examples = init_oppossed_examples(letters, logs)
+counterexamples = init_counterexamples(letters, logs)
 
 old_population = init_population(letters, POPULATION_SIZE, logs)
 
-top_rank_list = OrderedDict(score_population(old_population, logs, opposed_examples))
+top_rank_list = OrderedDict(score_population(old_population, logs, counterexamples))
 sort!(top_rank_list, byvalue = true)
 
 for i in 1:ITERATION_NUMBER
@@ -37,7 +37,7 @@ for i in 1:ITERATION_NUMBER
 
     new_population = mutate(new_population, old_population, letters)
 
-    new_scores = score_population(new_population, logs, opposed_examples)
+    new_scores = score_population(new_population, logs, counterexamples)
 
     for (chromo, score) in new_scores
         if !(chromo in keys(top_rank_list))
