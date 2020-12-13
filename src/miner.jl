@@ -27,6 +27,7 @@ for i in 1:ITERATION_NUMBER
 
     new_population = Vector{String}()
 
+    # reproduce best chromosomes
     for (i, (chromo, penalty)) in enumerate(pairs(top_rank_list))
         if length(new_population) <= REPRODUCTION_SIZE
             push!(new_population, chromo)
@@ -35,10 +36,13 @@ for i in 1:ITERATION_NUMBER
         end
     end
 
+    # replenish population with mutated chromosomes
     new_population = mutate(new_population, old_population, letters)
 
+    # evaluate each chromosome's fitness
     new_scores = score_population(new_population, logs, counterexamples)
 
+    # update top rank list
     for (chromo, score) in new_scores
         if !(chromo in keys(top_rank_list))
             top_rank_list[chromo] = score
@@ -46,19 +50,17 @@ for i in 1:ITERATION_NUMBER
     end
     sort!(top_rank_list, byvalue = true)
 
-    while length(top_rank_list) > TOP_LIST_SIZE
+    # trim top rank list if needed
+    while length(top_rank_list) > REPRODUCTION_SIZE
         pop!(top_rank_list)
     end
 
+    # proceed to next generation
     old_population = new_population
 
-    for (i, (chromo, penalty)) in enumerate(pairs(top_rank_list))
-        if i <= 1
-            @printf("'%s' => (%.3f, %.3f)\n", chromo, penalty...)
-        else
-            break
-        end
-    end
+    # print top chromosome each iteration
+    chromo, penalty = first(top_rank_list)
+    @printf("'%s' => (%.3f, %.3f)\n", chromo, penalty...)
 end
 
 end

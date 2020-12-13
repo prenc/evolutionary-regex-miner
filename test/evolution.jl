@@ -41,6 +41,8 @@ end
 
 @testset "Remove event mutation" begin
     @testset "Elementary deletion" begin
+        @test "" == remove_event("a", idx = 1)
+
         @test "bcde" == remove_event("abcde", idx = 1)
         @test "acde" == remove_event("abcde", idx = 2)
         @test "abde" == remove_event("abcde", idx = 3)
@@ -48,7 +50,7 @@ end
         @test "abcd" == remove_event("abcde", idx = 5)
     end
 
-    @testset "Deletion in or branch" begin
+    @testset "Deletion inside or branch" begin
         @test "b" == remove_event("(a|b)", idx = 2)
         @test "a" == remove_event("(a|b)", idx = 4)
         @test "b" == remove_event("(a+|b)+", idx = 2)
@@ -79,9 +81,18 @@ end
     end
 
     @testset "Deletion of loops" begin
+        @test "" == remove_event("a+", idx = 1)
+
+        @test "b+" == remove_event("ab+", idx = 1)
+        @test "a" == remove_event("ab+", idx = 2)
+
         @test "b+c" == remove_event("(ab)+c", idx = 2)
         @test "a+c" == remove_event("(ab)+c", idx = 3)
         @test "(ab)+" == remove_event("(ab)+c", idx = 6)
+
+        @test "(bc)+" == remove_event("(abc)+", idx = 2)
+        @test "(ac)+" == remove_event("(abc)+", idx = 3)
+        @test "(ab)+" == remove_event("(abc)+", idx = 4)
     end
 end
 

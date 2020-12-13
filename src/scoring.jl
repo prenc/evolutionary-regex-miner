@@ -9,24 +9,26 @@ using Base.Threads: @spawn, fetch
 using StatsBase: sample
 using Random: rand
 
-function score(regex::String, logs::Vector{String}, counterexamples)
-    log_fitness = Vector()
+function score(regex::String, logs::Vector{String}, counterexamples::Vector{String})
+    log_fitness = Vector{Float64}()
     fitness = 1
     for log in logs
-        try
-            matches = collect(eachmatch(Regex(regex), log))
-            push!(
-                log_fitness,
-                isempty(matches) ? 1 :
-                1 - findmax(map(m -> length(m.match), matches))[1] / length(log),
-            )
-            fitness = mean(log_fitness)
-        catch e
-            @debug "Chromosome too complex: '$(regex)'"
-        end
+        matches = collect(eachmatch(Regex(regex), log))
+        push!(
+            log_fitness,
+            isempty(matches) ? 1 :
+            1 - findmax(map(m -> length(m.match), matches))[1] / length(log),
+        )
+        fitness = mean(log_fitness)
     end
 
-    precision = 1 - sum(map(log -> occursin(Regex(regex), log), counterexamples)) / length(counterexamples)
+    precision = if COUNTEREXAMPLE_NUMBER > 0
+        1 - sum(
+            map(log -> occursin(Regex(regex), log), counterexamples)
+        ) / length(counterexamples)
+    else
+        0
+    end
 
     event_number = 0
     event_inside_and = 0
@@ -65,20 +67,17 @@ function score(regex::String, logs::Vector{String}, counterexamples)
     return regex, (FITNESS_WEIGHT * fitness + PRECISION_WEIGHT * precision, simplicity)
 end
 
-function score_population(population::Vector{String}, logs::Vector{String}, counterexamples)
-    scored_population = map(fetch, map(chromo -> @spawn(score(chromo, logs, counterexamples)), population))
-
-    # precisions = [score for (_, (_, score)) in scored_population]
-    # max_precision = max(precisions...)
-
-    # return [(chromo, fitness + precision / max_precision / 2) for (chromo, (fitness, precision)) in scored_population]
-
-    return scored_population
+function score_population(
+        population::Vector{String},
+        logs::Vector{String},
+        counterexamples::Vector{String}
+)::Vector{Tuple{String,Tuple}}
+    return map(fetch, map(chromo -> @spawn(score(chromo, logs, counterexamples)), population))
 end
 
 function init_counterexamples(events::String, logs::Vector{String})::Vector{String}
     println("Initializing $(COUNTEREXAMPLE_NUMBER) counterexamples...")
-    log_lengths = map(length, logs)
+
     logs = Set(logs)
     counter_examples = Set{String}()
 
