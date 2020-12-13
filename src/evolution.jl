@@ -126,14 +126,24 @@ function add_branch_or(chromo::String, events::String; idx = nothing)::Union{Str
     if idx == nothing
         possible_ids = Vector{Int}()
         inside_and = false
+        forbidden_iter = 0
         for (i, e) in enumerate(chromo)
-            if !inside_and && isletter(e) && e != new_event
+            if !inside_and && isletter(e) && e != new_event &&
+                forbidden_iter == 0 && (i == length(chromo) || chromo[i+1] != '+')
                 push!(possible_ids, i)
             elseif e == '['
                 push!(possible_ids, i)
                 inside_and = true
             elseif e == '}'
                 inside_and = false
+            elseif e == '('
+                l_bracket, pipe, r_bracket, _ = find_brackets(chromo, i)
+                if pipe == nothing
+                    forbidden_iter = r_bracket
+                end
+            end
+            if i == forbidden_iter
+                forbidden_iter = 0
             end
         end
 
@@ -182,7 +192,7 @@ function add_loop(chromo::String; idx = nothing, idx2 = nothing)::Union{String,N
         possible_ids = Vector{Int}()
         nest_counter = 0
         for (i, e) in enumerate(chromo)
-            if nest_counter == 0 && isletter(e)
+            if nest_counter == 0 && isletter(e) && (i == length(chromo) || chromo[i+1] != '+')
                 push!(possible_ids, i)
             elseif occursin(e, "[(")
                 nest_counter += 1
@@ -208,7 +218,12 @@ function add_loop(chromo::String; idx = nothing, idx2 = nothing)::Union{String,N
     return if last_letter_idx == idx || random_idx == idx
         chromo[1:idx] * '+' * chromo[idx+1:end]
     else
-        chromo[1:idx-1] * '(' * chromo[idx:random_idx] * ")+" * chromo[random_idx+1:end]
+        closing_bracket = if random_idx < length(chromo) && chromo[random_idx+1] == '+'
+            ')'
+        else
+            ")+"
+        end
+        chromo[1:idx-1] * '(' * chromo[idx:random_idx] * closing_bracket * chromo[random_idx+1:end]
     end
 end
 
@@ -238,13 +253,22 @@ function add_branch_and(
     if idx == nothing
         possible_ids = Vector{Int}()
         inside_and = false
+        forbidden_iter = 0
         for (i, e) in enumerate(chromo)
-            if isletter(e) && !inside_and
+            if isletter(e) && !inside_and && forbidden_iter == 0
                 push!(possible_ids, i)
             elseif e == '['
                 inside_and = true
             elseif e == '}'
                 inside_and = false
+            elseif e == '('
+                l_bracket, pipe, r_bracket, _ = find_brackets(chromo, i)
+                if pipe == nothing
+                    forbidden_iter = r_bracket
+                end
+            end
+            if i == forbidden_iter
+                forbidden_iter = 0
             end
         end
 
@@ -421,14 +445,24 @@ function crossover(
     if idx1 == nothing
         possible_ids = Vector{Int}()
         inside_and = false
+        forbidden_iter = 0
         for (i, e) in enumerate(chromo1)
-            if !inside_and && (isletter(e) || e == '(')
+            if !inside_and && forbidden_iter == 0 && isletter(e)
                 push!(possible_ids, i)
             elseif e == '['
                 push!(possible_ids, i)
                 inside_and = true
             elseif e == '}'
                 inside_and = false
+            elseif e == '('
+                push!(possible_ids, i)
+                l_bracket, pipe, r_bracket, _ = find_brackets(chromo1, i)
+                if pipe == nothing
+                    forbidden_iter = r_bracket
+                end
+            end
+            if i == forbidden_iter
+                forbidden_iter = 0
             end
         end
 
@@ -564,14 +598,14 @@ function mutate(
         chromo = rand(old_population)
 
         evolution_chance = rand()
-        new_chromo = if evolution_chance <= CROSSOVER_RATE
-            crossover(chromo, rand(old_population))
+        new_chromo, mutation = if evolution_chance <= CROSSOVER_RATE
+            crossover(chromo, rand(old_population)), "CROSSOVER"
         else
             mutation = sample(
                 collect(keys(ALL_MUTATIONS)),
                 Weights(collect(values(ALL_MUTATIONS))),
             )
-            if mutation == ADD_EVENT
+            new_chromo = if mutation == ADD_EVENT
                 add_event(chromo, events)
             elseif mutation == REMOVE_EVENT
                 remove_event(chromo)
@@ -592,6 +626,7 @@ function mutate(
             else
                 error("Unsupported mutation encounterd: '$(mutation)'")
             end
+            new_chromo, mutation
         end
 
         if new_chromo == nothing
@@ -612,5 +647,4 @@ function mutate(
 
     return new_population
 end
-
 end
