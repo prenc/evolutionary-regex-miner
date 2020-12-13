@@ -26,7 +26,7 @@ function score(regex::String, logs::Vector{String}, counterexamples)
         end
     end
 
-    precision = sum(map(log -> occursin(Regex(regex), log), counterexamples)) / length(counterexamples)
+    precision = 1 - sum(map(log -> occursin(Regex(regex), log), counterexamples)) / length(counterexamples)
 
     event_number = 0
     event_inside_and = 0
