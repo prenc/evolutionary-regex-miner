@@ -26,7 +26,7 @@ function score(regex::String, logs::Vector{String}, counterexamples)
         end
     end
 
-    precision = sum(map(log -> occursin(regex, log), counterexamples)) / length(counterexamples)
+    precision = sum(map(log -> occursin(Regex(regex), log), counterexamples)) / length(counterexamples)
 
     event_number = 0
     event_inside_and = 0
@@ -62,7 +62,7 @@ function score(regex::String, logs::Vector{String}, counterexamples)
 
     @debug "Score '$(regex)': fitness: '$(fitness)'," *
            " precision: '$(precision)', simplicity: '$(simplicity)'"
-    return regex, (fitness + precision, simplicity)
+    return regex, (FITNESS_WEIGHT * fitness + PRECISION_WEIGHT * precision, simplicity)
 end
 
 function score_population(population::Vector{String}, logs::Vector{String}, counterexamples)
