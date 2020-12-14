@@ -12,29 +12,25 @@ using .scoring
 using .evolution
 
 logs = readlines(LOG_FILE)
+
+# extract all possible letter representing events
 letters = join(unique(join(logs)))
 
 counterexamples = init_counterexamples(letters, logs)
 
-old_population = init_population(letters, POPULATION_SIZE, logs)
+old_population = init_population(letters, logs)
 
-top_rank_list = OrderedDict(score_population(old_population, logs, counterexamples))
+top_rank_list = OrderedDict(
+    score_population(old_population, logs, counterexamples)
+)
 sort!(top_rank_list, byvalue = true)
 
-for i in 1:ITERATION_NUMBER
+for i = 1:ITERATION_NUMBER
     println("[GENERATION $(i)]")
     global top_rank_list, old_population
 
-    new_population = Vector{String}()
-
     # reproduce best chromosomes
-    for (i, (chromo, penalty)) in enumerate(pairs(top_rank_list))
-        if length(new_population) <= REPRODUCTION_SIZE
-            push!(new_population, chromo)
-        else
-            break
-        end
-    end
+    new_population = collect(keys(top_rank_list))
 
     # replenish population with mutated chromosomes
     new_population = mutate(new_population, old_population, letters)
@@ -58,7 +54,7 @@ for i in 1:ITERATION_NUMBER
     # proceed to next generation
     old_population = new_population
 
-    # print top chromosome each iteration
+    # print top chromosome
     chromo, penalty = first(top_rank_list)
     @printf("'%s' => (%.3f, %.3f)\n", chromo, penalty...)
 end

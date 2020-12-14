@@ -572,12 +572,11 @@ end
 
 function init_population(
     events::String,
-    population_size::Int,
     logs::Vector{String},
 )::Vector{String}
     population = Vector{String}()
 
-    while length(population) < population_size
+    while length(population) < POPULATION_SIZE
         chromo_size = rand(MIN_CHROMO_SIZE:INITIAL_MAX_CHROMO_SIZE)
 
         random_log = rand(logs)
