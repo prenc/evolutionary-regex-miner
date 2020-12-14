@@ -11,9 +11,10 @@ using DataStructures: OrderedDict
 using .scoring
 using .evolution
 
+# parse log file
 logs = readlines(LOG_FILE)
 
-# extract all possible letter representing events
+# extract all possible letters representing events
 letters = join(unique(join(logs)))
 
 counterexamples = init_counterexamples(letters, logs)
