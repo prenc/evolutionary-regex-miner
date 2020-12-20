@@ -31,4 +31,4 @@ const PRECISION_WEIGHT = 1
 
 const COUNTEREXAMPLE_NUMBER = 0
 
-const LOG_FILE = "logs/example7.txt"
+const LOG_FILE = "../logs/example7.txt"

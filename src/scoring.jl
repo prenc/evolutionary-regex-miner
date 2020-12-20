@@ -64,7 +64,7 @@ function score(regex::String, logs::Vector{String}, counterexamples::Vector{Stri
 
     @debug "Score '$(regex)': fitness: '$(fitness)'," *
            " precision: '$(precision)', simplicity: '$(simplicity)'"
-    return regex, (FITNESS_WEIGHT * fitness + PRECISION_WEIGHT * precision, simplicity)
+    return regex, (FITNESS_WEIGHT * fitness + PRECISION_WEIGHT * precision, simplicity, fitness, precision)
 end
 
 function score_population(

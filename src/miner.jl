@@ -56,8 +56,8 @@ for i = 1:ITERATION_NUMBER
     old_population = new_population
 
     # print top chromosome
-    chromo, penalty = first(top_rank_list)
-    @printf("'%s' => (%.3f, %.3f)\n", chromo, penalty...)
+    chromo, (penalty, simplicity, fitness, precision) = first(top_rank_list)
+    @printf("'%s' => (score: %.3f, simplicity: %.3f, fitness: %.3f, precision: %.3f)\n", chromo, penalty, simplicity, fitness, precision)
 end
 
 end
