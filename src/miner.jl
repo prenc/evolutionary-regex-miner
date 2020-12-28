@@ -57,7 +57,7 @@ for i = 1:ITERATION_NUMBER
 
     # print top chromosome
     chromo, penalty = first(top_rank_list)
-    @printf("'%s' => (%.3f, %.3f)\n", chromo, penalty...)
+    @printf("'%s' => (%.3f)\n", chromo, penalty)
 end
 
 end

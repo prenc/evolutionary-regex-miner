@@ -62,16 +62,23 @@ function score(regex::String, logs::Vector{String}, counterexamples::Vector{Stri
         loop_number * LOOP_PENALTY
 
 
-    @debug "Score '$(regex)': fitness: '$(fitness)'," *
-           " precision: '$(precision)', simplicity: '$(simplicity)'"
-    return regex, (FITNESS_WEIGHT * fitness + PRECISION_WEIGHT * precision, simplicity)
+    score = FITNESS_WEIGHT * fitness +
+        PRECISION_WEIGHT * precision +
+        SIMPLICITY_WEIGTH * simplicity
+
+    @debug """Score for '$(regex)':
+    fitness: '$(fitness)', precision: '$(precision)', simplicity: '$(simplicity)'
+    summary score: '$(score)'
+    """
+
+    return regex, score
 end
 
 function score_population(
         population::Vector{String},
         logs::Vector{String},
         counterexamples::Vector{String}
-)::Vector{Tuple{String,Tuple}}
+)::Vector{Tuple}
     return map(fetch, map(chromo -> @spawn(score(chromo, logs, counterexamples)), population))
 end
 
