@@ -7,6 +7,8 @@ include("parameters.jl")
 using Printf: @printf
 using StatsBase: sample
 using DataStructures: OrderedDict
+using StringDistances: Levenshtein, compare
+using Logging
 
 using .scoring
 using .evolution
@@ -40,9 +42,23 @@ for i = 1:ITERATION_NUMBER
     new_scores = score_population(new_population, logs, counterexamples)
 
     # update top rank list
-    for (chromo, score) in new_scores
-        if !(chromo in keys(top_rank_list))
-            top_rank_list[chromo] = score
+    for (new_chromo, new_score) in new_scores
+        addition_allowed = true
+
+        for (top_chromo, top_score) in pairs(top_rank_list)
+            similarity = compare(new_chromo, top_chromo, Levenshtein())
+            if similarity >= SIMILARITY_THRESHOLD
+                if new_score < top_score
+                    delete!(top_rank_list, top_chromo)
+                else
+                    addition_allowed = false
+                end
+                break
+            end
+        end
+
+        if addition_allowed
+            top_rank_list[new_chromo] = new_score
         end
     end
     sort!(top_rank_list, byvalue = true)
@@ -58,6 +74,10 @@ for i = 1:ITERATION_NUMBER
     # print top chromosome
     chromo, penalty = first(top_rank_list)
     @printf("'%s' => (%.3f)\n", chromo, penalty)
+
+    with_logger(ConsoleLogger(stderr, Logging.Debug)) do
+        score(chromo, logs, counterexamples)
+    end
 end
 
 end

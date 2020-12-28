@@ -628,6 +628,7 @@ function mutate(
             else
                 error("Unsupported mutation encounterd: '$(mutation)'")
             end
+
             new_chromo, mutation
         end
 
