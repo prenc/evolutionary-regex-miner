@@ -35,7 +35,7 @@ function add_event(chromo::String, events::String; idx = nothing)::Union{String,
     if idx == nothing
         possible_ids = Vector{Int}()
         for (i, e) in enumerate(chromo)
-            if isletter(e) || occursin(e, "[(|)")
+            if e == "." || isnumeric(e) || occursin(e, "[(|)")
                 push!(possible_ids, i - 1, i)
             elseif e == '}'
                 push!(possible_ids, i)
@@ -64,7 +64,7 @@ function add_event(chromo::String, events::String; idx = nothing)::Union{String,
 end
 
 function remove_event(chromo::String; idx = nothing)::String
-    idx = idx == nothing ? rand(findall(isletter, chromo)) : idx
+    idx = idx == nothing ? rand(findall(e -> e == "." || isnumeric(e), chromo)) : idx
     r_idx = idx
 
     if idx < length(chromo) && chromo[idx+1] == '+'
@@ -130,7 +130,7 @@ function add_branch_or(chromo::String, events::String; idx = nothing)::Union{Str
         inside_and = false
         block_to_idx = 0
         for (i, e) in enumerate(chromo)
-            if !inside_and && isletter(e) && e != new_event &&
+            if !inside_and && (e == "." || isnumeric(e)) && e != new_event &&
                     block_to_idx == 0 && (i == length(chromo) || chromo[i+1] != '+')
                 push!(possible_ids, i)
             elseif e == '['
@@ -195,7 +195,7 @@ function add_loop(chromo::String; idx = nothing, idx2 = nothing)::Union{String,N
         possible_ids = Vector{Int}()
         nest_counter = 0
         for (i, e) in enumerate(chromo)
-            if nest_counter == 0 && isletter(e) && (i == length(chromo) || chromo[i+1] != '+')
+            if nest_counter == 0 && (e == "." || isnumeric(e)) && (i == length(chromo) || chromo[i+1] != '+')
                 push!(possible_ids, i)
             elseif occursin(e, "[(")
                 nest_counter += 1
@@ -210,7 +210,7 @@ function add_loop(chromo::String; idx = nothing, idx2 = nothing)::Union{String,N
 
     last_letter_idx = idx
     for i in idx+1:length(chromo)
-        if isletter(chromo[i])
+        if chromo[i] == "." || isnumeric(chromo[i])
             last_letter_idx += 1
         else
             break
@@ -258,7 +258,7 @@ function add_branch_and(
         inside_and = false
         block_to_idx = 0
         for (i, e) in enumerate(chromo)
-            if isletter(e) && !inside_and && block_to_idx == 0
+            if (e == "." || isnumeric(e)) && !inside_and && block_to_idx == 0
                 push!(possible_ids, i)
             elseif e == '['
                 inside_and = true
@@ -280,7 +280,7 @@ function add_branch_and(
     end
 
     new_chromo_sub, r_shift =
-        if idx < length(chromo) && isletter(chromo[idx+1]) && chromo[idx] != chromo[idx+1]
+        if idx < length(chromo) && (chromo[idx+1] == "." || isnumeric(chromo[idx+1])) && chromo[idx] != chromo[idx+1]
             join(sort(collect(chromo[idx:idx+1]))), 2
         else
             new_events = Set(collect(events))
@@ -323,7 +323,7 @@ function pull_out(chromo::String, idx = nothing)::Union{String,Nothing}
     r_shift = plus ? 2 : 1
 
     if chromo[l_bracket+1] == chromo[pipe+1]
-        new_chromo_tail = if isletter(chromo[l_bracket+1])
+        new_chromo_tail = if (chromo[l_bracket+1] == "." || isnumeric(chromo[l_bracket+1]))
             plus1 = chromo[l_bracket+2] == '+'
 
             if (chromo[pipe+2] == '+') == plus1
@@ -388,7 +388,7 @@ function pull_out(chromo::String, idx = nothing)::Union{String,Nothing}
         outer_closing = plus ? ")+" : ")"
 
         if c[pipe-1] == c[r_bracket-1]
-            new_chromo_head = if isletter(c[r_bracket-1])
+            new_chromo_head = if (c[r_bracket-1] == "." || isnumeric(c[r_bracket-1]))
                 if r_bracket - pipe == 2 || pipe -  l_bracket == 2 # remove or branch
                     c[1:l_bracket-1] * c[l_bracket+1:pipe-2] *
                     c[pipe+1:r_bracket-1] * plus_sign
@@ -450,7 +450,7 @@ function crossover(
         inside_and = false
         block_to_idx = 0
         for (i, e) in enumerate(chromo1)
-            if !inside_and && block_to_idx == 0 && isletter(e)
+            if !inside_and && block_to_idx == 0 && (e == "." || isnumeric(e))
                 push!(possible_ids, i)
             elseif e == '['
                 push!(possible_ids, i)
@@ -476,7 +476,7 @@ function crossover(
         possible_ids = Vector{Int}()
         inside_and = false
         for (i, e) in enumerate(chromo2)
-            if !inside_and && (isletter(e) || e == '(')
+            if !inside_and && (e == "." || isnumeric(e) || e == '(')
                 push!(possible_ids, i)
             elseif e == '['
                 push!(possible_ids, i)

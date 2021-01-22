@@ -1,9 +1,9 @@
-const ITERATION_NUMBER = 100
+const ITERATION_NUMBER = 10_000
 
 const POPULATION_SIZE = 100
 const REPRODUCTION_SIZE = POPULATION_SIZE / 4
 
-const CROSSOVER_RATE = 0.7
+const CROSSOVER_RATE = 0.2
 # MUTATION_RATE = 1 - CROSSOVER_RATE
 
 # mutation weights
@@ -11,8 +11,8 @@ const ADD_EVENT_RATE = 2
 const REMOVE_EVENT_RATE = 2
 const ADD_BRANCH_OR_RATE = 3
 const REMOVE_BRANCH_OR_RATE = 4
-const ADD_BRANCH_AND_RATE = 2
-const REMOVE_BRANCH_AND_RATE = 1
+const ADD_BRANCH_AND_RATE = 0  # doesn't work for ips
+const REMOVE_BRANCH_AND_RATE = 0
 const ADD_LOOP_RATE = 1
 const REMOVE_LOOP_RATE = 1
 const PULL_OUT_RATE = 1
@@ -33,4 +33,4 @@ const SIMPLICITY_WEIGTH = 2
 
 const COUNTEREXAMPLE_NUMBER = 0
 
-const LOG_FILE = "logs/example7.txt"
+const LOG_FILE = "logs/ips.txt"

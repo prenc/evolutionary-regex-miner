@@ -9,9 +9,10 @@ using Base.Threads: @spawn, fetch
 using StatsBase: sample
 using Random: rand
 
-function score(regex::String, logs::Vector{String}, counterexamples::Vector{String})
+function score(chromo::String, logs::Vector{String}, counterexamples::Vector{String})
     log_fitness = Vector{Float64}()
     fitness = 1
+    regex = replace(chromo, "." => "\\.")
     for log in logs
         matches = collect(eachmatch(Regex(regex), log))
         push!(
@@ -33,12 +34,12 @@ function score(regex::String, logs::Vector{String}, counterexamples::Vector{Stri
     event_number = 0
     event_inside_and = 0
 
-    branch_or_number = sum(get_bracket_levels(regex))
+    branch_or_number = sum(get_bracket_levels(chromo))
     branch_and_number = 0
     loop_number = 0
 
     inside_and = false
-    for c in regex
+    for c in chromo
         if c == '+'
             loop_number += 1
         elseif isletter(c)
@@ -66,12 +67,12 @@ function score(regex::String, logs::Vector{String}, counterexamples::Vector{Stri
         PRECISION_WEIGHT * precision +
         SIMPLICITY_WEIGTH * simplicity
 
-    @debug """Score for '$(regex)':
+    @debug """Score for '$(chromo)':
     fitness: '$(fitness)', precision: '$(precision)', simplicity: '$(simplicity)'
     summary score: '$(score)'
     """
 
-    return regex, score
+    return chromo, score
 end
 
 function score_population(
